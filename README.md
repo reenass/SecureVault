@@ -1,12 +1,12 @@
 # 🔐 SecureVault — Secure Cloud Storage System
 
-A Flask-based secure cloud storage application designed to protect user files through encryption, secure key management, integrity verification, file sharing, searchable encryption, and privacy-preserving file statistics.
+A Flask-based secure cloud storage application designed to protect user files through encryption, secure key management, integrity verification, secure file sharing, searchable encryption, and privacy-preserving file statistics.
 
 ## 📌 Project Overview
 
-**SecureVault** is a graduation project developed to explore practical approaches to protecting files stored in a cloud-based environment.
+**SecureVault** is a graduation project developed to explore practical approaches to protecting files in a cloud-based storage environment.
 
-The system combines symmetric and asymmetric cryptography to protect file content and encryption keys, while also providing mechanisms for integrity verification, secure file sharing, searchable encryption, and privacy-preserving file statistics.
+The system combines **symmetric and asymmetric cryptography** to protect file content and encryption keys, while also providing mechanisms for **file integrity verification, secure file sharing, searchable encryption, and privacy-preserving file statistics**.
 
 ## 🛠️ Technologies
 
@@ -26,21 +26,21 @@ The system combines symmetric and asymmetric cryptography to protect file conten
 
 Files are encrypted using **AES-256-GCM**, providing confidentiality and authenticated encryption.
 
-A unique random AES key is generated for file encryption.
+A unique random AES key is generated for each file.
 
 ### RSA-2048 Key Protection
 
-The generated AES file key is protected using **RSA-2048** with OAEP and SHA-256.
+The generated AES file key is protected using **RSA-2048** with **OAEP and SHA-256**.
 
 This hybrid encryption approach combines the efficiency of symmetric encryption with asymmetric key protection.
 
 ### Password-Based Key Derivation
 
-The application uses **PBKDF2-HMAC-SHA256** with **600,000 iterations** for password-based key derivation.
+The application uses **PBKDF2-HMAC-SHA256** with **600,000 iterations** for password-based key derivation and protected private-key handling.
 
 ### File Integrity Verification
 
-**SHA-256** hashes are used to verify file integrity and detect unexpected changes.
+**SHA-256** hashes are used to verify file integrity and detect unexpected modifications.
 
 ### Searchable Encryption
 
@@ -48,7 +48,7 @@ The system includes **Searchable Symmetric Encryption (SSE)** functionality usin
 
 ### Privacy-Preserving File Statistics
 
-The application includes a **Paillier homomorphic encryption** component for privacy-preserving file-size statistics.
+The application includes a **Paillier homomorphic encryption** component for privacy-preserving file-size statistics and selected calculations on encrypted values.
 
 ### Authentication & Authorization
 
@@ -61,7 +61,83 @@ The system provides:
 * Secure file sharing
 * CSRF protection
 
-## 📂 Main Application Components
+## 🔄 File Protection Workflow
+
+### Upload
+
+1. The user uploads a file.
+2. A **SHA-256** hash is generated for integrity verification.
+3. A random **AES-256** file key is generated.
+4. The file is encrypted using **AES-256-GCM**.
+5. The AES file key is protected using the user's **RSA-2048 public key**.
+6. The encrypted file and protected key information are stored by the application.
+7. Additional features such as searchable encryption and privacy-preserving statistics can be applied where supported.
+
+### Download
+
+1. The application retrieves the protected file information.
+2. The user's protected RSA private key is unlocked using a password-derived key.
+3. **RSA** is used to recover the AES file key.
+4. **AES-256-GCM** decrypts the file.
+5. The GCM authentication tag is verified.
+6. The **SHA-256** integrity value is checked.
+7. The original file is restored when verification succeeds.
+
+## 🔎 Searchable Encryption
+
+SecureVault provides an **SSE-based search mechanism** using protected search tokens rather than directly exposing searchable terms.
+
+The project also includes content indexing for supported text-based file types.
+
+## 📊 Privacy-Preserving Statistics
+
+The application includes a **Paillier-based component** for performing selected calculations on encrypted file-size statistics.
+
+This demonstrates how **homomorphic encryption** can support computation on protected values without directly exposing the underlying data.
+
+## 📸 Project Screenshots
+
+### Home
+
+![Home](Screenshots/01-home.png)
+
+### Register
+
+![Register](Screenshots/02-register.png)
+
+### Login
+
+![Login](Screenshots/03-login.png)
+
+### Dashboard
+
+![Dashboard](Screenshots/04-dashboard.png)
+
+### My Files
+
+![My Files](Screenshots/05-my-files.png)
+
+### Upload & Encryption
+
+![Upload & Encryption](Screenshots/06-upload-encryption.png)
+
+### Security Dashboard
+
+![Security Dashboard](Screenshots/07-security-dashboard.png)
+
+### Search
+
+![Search](Screenshots/08-search.png)
+
+### File Sharing
+
+![File Sharing](Screenshots/09-file-sharing.png)
+
+### Decrypt & Download
+
+![Decrypt & Download](Screenshots/10-decrypt-download.png)
+
+## 📂 Main Application Structure
 
 ```text
 SecureVault/
@@ -78,6 +154,18 @@ SecureVault/
 ├── templates/
 │   └── Flask HTML templates
 │
+├── Screenshots/
+│   ├── 01-home.png
+│   ├── 02-register.png
+│   ├── 03-login.png
+│   ├── 04-dashboard.png
+│   ├── 05-my-files.png
+│   ├── 06-upload-encryption.png
+│   ├── 07-security-dashboard.png
+│   ├── 08-search.png
+│   ├── 09-file-sharing.png
+│   └── 10-decrypt-download.png
+│
 ├── config.py
 ├── run.py
 ├── requirements.txt
@@ -89,49 +177,17 @@ SecureVault/
 └── start.sh
 ```
 
-## 🔄 File Protection Workflow
-
-### Upload
-
-1. The user uploads a file.
-2. A SHA-256 hash is generated for integrity verification.
-3. A random AES-256 key is generated.
-4. The file is encrypted using AES-256-GCM.
-5. The AES key is protected using the user's RSA-2048 public key.
-6. The encrypted file and protected key information are stored by the application.
-7. Additional security features such as searchable encryption can be applied where supported.
-
-### Download
-
-1. The application retrieves the protected file information.
-2. The user's protected private key is unlocked using their password-derived key.
-3. RSA is used to recover the AES file key.
-4. AES-GCM decrypts the file.
-5. The GCM authentication tag is verified.
-6. The SHA-256 integrity value is checked.
-7. The original file is restored if verification succeeds.
-
-## 🔎 Searchable Encryption
-
-SecureVault provides an SSE-based search mechanism using protected search tokens rather than directly exposing searchable terms.
-
-The project also includes content indexing for supported text-based file types.
-
-## 📊 Privacy-Preserving Statistics
-
-The application includes a Paillier-based component for performing selected calculations on encrypted file-size statistics.
-
-This demonstrates how homomorphic encryption can be used for computations while keeping the underlying values protected.
-
 ## 🚀 Getting Started
 
 ### Requirements
 
 * Python 3.8+
-* MySQL (for production configuration) or SQLite for development/testing
+* MySQL for production configuration, or SQLite for development/testing
 * Git
 
 ### Windows
+
+Run:
 
 ```bash
 setup.bat
@@ -173,7 +229,7 @@ MYSQL_DB
 ADMIN_PASSWORD
 ```
 
-**Do not commit `.env` or private keys to the repository.**
+**Do not commit `.env`, passwords, private keys, or other sensitive credentials to the repository.**
 
 ## 🎓 Academic Project
 
@@ -192,7 +248,7 @@ ADMIN_PASSWORD
 
 ## 📚 Project Focus
 
-This project focuses on practical implementation and understanding of:
+This project focuses on the practical implementation and understanding of:
 
 * Applied Cryptography
 * Secure Cloud Storage
@@ -211,3 +267,4 @@ SecureVault is an academic graduation project developed for educational and demo
 ---
 
 **SecureVault — Secure Cloud Storage System**
+
