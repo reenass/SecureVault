@@ -42,7 +42,7 @@ The application uses **PBKDF2-HMAC-SHA256** with **600,000 iterations** for pass
 
 **SHA-256** hashes are used to verify file integrity and detect unexpected changes.
 
-### Secure Search
+### Searchable Encryption
 
 The system includes **Searchable Symmetric Encryption (SSE)** functionality using HMAC-based tokens for protected search operations.
 
@@ -113,7 +113,7 @@ SecureVault/
 
 ## 🔎 Searchable Encryption
 
-SecureVault provides an SSE-based search mechanism designed to allow protected search operations without storing searchable information in plain form.
+SecureVault provides an SSE-based search mechanism using protected search tokens rather than directly exposing searchable terms.
 
 The project also includes content indexing for supported text-based file types.
 
@@ -131,4 +131,83 @@ This demonstrates how homomorphic encryption can be used for computations while 
 * MySQL (for production configuration) or SQLite for development/testing
 * Git
 
-### Wi
+### Windows
+
+```bash
+setup.bat
+```
+
+Then:
+
+```bash
+start.bat
+```
+
+### Linux / macOS
+
+```bash
+chmod +x setup.sh start.sh
+./setup.sh
+./start.sh
+```
+
+The application runs on:
+
+```text
+http://localhost:5000
+```
+
+## ⚙️ Configuration
+
+Copy `.env.example` to `.env` and configure the required environment variables.
+
+Important variables include:
+
+```text
+FLASK_ENV
+SECRET_KEY
+MYSQL_HOST
+MYSQL_USER
+MYSQL_PASSWORD
+MYSQL_DB
+ADMIN_PASSWORD
+```
+
+**Do not commit `.env` or private keys to the repository.**
+
+## 🎓 Academic Project
+
+**Project:** SecureVault — Secure Cloud Storage System
+
+**Developed by:**
+
+* Renas Abu-Shareefah
+* Ayeh Al-hazaimeh
+
+**Supervisor:** Dr. Mohammed Tawfik
+
+**University:** Ajloun National University
+
+**Graduation Year:** 2026
+
+## 📚 Project Focus
+
+This project focuses on practical implementation and understanding of:
+
+* Applied Cryptography
+* Secure Cloud Storage
+* Hybrid Encryption
+* Key Management
+* File Integrity
+* Searchable Encryption
+* Homomorphic Encryption
+* Authentication & Authorization
+* Web Application Security
+
+## ⚠️ Disclaimer
+
+SecureVault is an academic graduation project developed for educational and demonstration purposes. It should be reviewed and security-tested further before being used as a production cloud storage service.
+
+---
+
+**SecureVault — Secure Cloud Storage System**
