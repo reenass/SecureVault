@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Admin Sidebar -->
+        <div class="col-lg-2 col-md-3 mb-4">
+            <div class="sidebar rounded-3">
+                <div class="px-3 py-2">
+                    <span class="badge bg-danger">Admin Panel</span>
+                </div>
+                <hr class="my-2">
+                <a href="{{ url_for('admin.admin_dashboard') }}" class="sidebar-link active">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin.admin_users') }}" class="sidebar-link">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a href="{{ url_for('admin.activity_logs') }}" class="sidebar-link">
+                    <i class="fas fa-history"></i> Activity Logs
+                </a>
+                <hr class="my-2">
+                <a href="{{ url_for('main.dashboard') }}" class="sidebar-link">
+                    <i class="fas fa-arrow-left"></i> Back to App
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <h4 class="mb-4">
+                <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+            </h4>
+            
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-4">
+                    <div class="stat-card primary fade-in">
+                        <i class="fas fa-users stat-icon"></i>
+                        <div class="stat-value">{{ total_users }}</div>
+                        <div class="stat-label">Total Users</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card success fade-in">
+                        <i class="fas fa-file stat-icon"></i>
+                        <div class="stat-value">{{ total_files }}</div>
+                        <div class="stat-label">Total Files</div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="stat-card info fade-in">
+                        <i class="fas fa-hdd stat-icon"></i>
+                        <div class="stat-value">{{ format_bytes(total_storage) }}</div>
+                        <div class="stat-label">Total Storage Used</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row g-4">
+                <!-- Recent Users -->
+                <div class="col-lg-6">
+                    <div class="card fade-in">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-users me-2"></i>Recent Users
+                            </h6>
+                            <a href="{{ url_for('admin.admin_users') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive">
+                                <table class="table table-hover mb-0">
+                                    <thead>
+                                        <tr>
+                                            <th>User</th>
+                                            <th>Status</th>
+                                            <th>Joined</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for user in recent_users %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="rounded-circle bg-primary d-flex align-items-center justify-content-center me-2" 
+                                                         style="width: 32px; height: 32px;">
+                                                        <i class="fas fa-user text-white small"></i>
+                                                    </div>
+                                                    <div>
+                                                        <div class="fw-medium">{{ user.username }}</div>
+                                                        <small class="text-muted">{{ user.email }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                {% if user.is_active %}
+                                                <span class="badge bg-success">Active</span>
+                                                {% else %}
+                                                <span class="badge bg-danger">Inactive</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ format_datetime(user.created_at) }}</td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="col-lg-6">
+                    <div class="card fade-in">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">
+                                <i class="fas fa-history me-2"></i>Recent Activity
+                            </h6>
+                            <a href="{{ url_for('admin.activity_logs') }}" class="btn btn-sm btn-outline-primary">View All</a>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="list-group list-group-flush">
+                                {% for activity in recent_activity %}
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="rounded-circle d-flex align-items-center justify-content-center me-3
+                                                    {% if activity.status == 'success' %}bg-success{% elif activity.status == 'failed' %}bg-danger{% else %}bg-warning{% endif %}" 
+                                             style="width: 32px; height: 32px; min-width: 32px;">
+                                            <i class="fas fa-{% if activity.action == 'login' %}sign-in-alt{% elif activity.action == 'upload' %}upload{% elif activity.action == 'download' %}download{% elif activity.action == 'delete' %}trash{% else %}circle{% endif %} text-white small"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <div class="fw-medium">{{ activity.action | capitalize }}</div>
+                                            <small class="text-muted">
+                                                {{ activity.user.username if activity.user else 'System' }} • 
+                                                {{ format_datetime(activity.created_at) }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

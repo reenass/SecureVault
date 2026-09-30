@@ -1,0 +1,290 @@
+{% extends "base.html" %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="py-5" style="background: linear-gradient(135deg, #4f46e5 0%, #4338ca 50%, #06b6d4 100%); min-height: 80vh;">
+    <div class="container">
+        <div class="row align-items-center min-vh-75">
+            <div class="col-lg-6 text-white mb-5 mb-lg-0">
+                <h1 class="display-3 fw-bold mb-4 fade-in">
+                    Your Files,<br>
+                    <span style="color: #06b6d4;">Fortified.</span>
+                </h1>
+                <p class="lead mb-4 opacity-90 fade-in" style="animation-delay: 0.1s;">
+                    Military-grade AES-256-GCM encryption with Paillier Homomorphic Encryption
+                    and Searchable Symmetric Encryption. Complete privacy in the cloud.
+                </p>
+                <div class="d-flex gap-3 flex-wrap fade-in" style="animation-delay: 0.2s;">
+                    <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-4">
+                        <i class="fas fa-rocket me-2"></i>Get Started Free
+                    </a>
+                    <a href="#features" class="btn btn-outline-light btn-lg px-4">
+                        <i class="fas fa-info-circle me-2"></i>Learn More
+                    </a>
+                </div>
+                
+                <div class="mt-5 d-flex gap-4 flex-wrap fade-in" style="animation-delay: 0.3s;">
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-shield-halved fa-2x me-3 opacity-75"></i>
+                        <div>
+                            <div class="fw-bold">AES-256-GCM</div>
+                            <small class="opacity-75">Authenticated Encryption</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-calculator fa-2x me-3 opacity-75"></i>
+                        <div>
+                            <div class="fw-bold">Paillier HE</div>
+                            <small class="opacity-75">Homomorphic Encryption</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-search fa-2x me-3 opacity-75"></i>
+                        <div>
+                            <div class="fw-bold">SSE</div>
+                            <small class="opacity-75">Searchable Encryption</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Developer Credit -->
+                <div class="mt-4 pt-3 border-top border-light border-opacity-25 fade-in" style="animation-delay: 0.4s;">
+                    <small class="opacity-75">
+                        <i class="fas fa-user-shield me-1"></i>
+                        Developed by <strong>Ayeh Al-hazaimeh & Renas Abu-Sharefah</strong> | 
+                        <i class="fas fa-envelope me-1"></i>ayeh.com1097@gmail.com & renasfaris2004@gmail.com
+                    </small>
+                </div>
+            </div>
+            
+            <div class="col-lg-6 fade-in" style="animation-delay: 0.4s;">
+                <div class="card border-0 shadow-lg" style="border-radius: 1.5rem; overflow: hidden;">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                                 style="width: 80px; height: 80px; background: linear-gradient(135deg, #4f46e5, #06b6d4);">
+                                <i class="fas fa-cloud-upload-alt fa-2x text-white"></i>
+                            </div>
+                            <h3 class="fw-bold">Secure Upload</h3>
+                            <p class="text-muted">Your files are encrypted before storage</p>
+                        </div>
+                        
+                        <div class="upload-zone mb-4">
+                            <i class="fas fa-file-upload"></i>
+                            <h5 class="mb-2">Drop files here</h5>
+                            <p class="text-muted mb-0">or click to browse</p>
+                        </div>
+                        
+                        <div class="row g-3 text-center">
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-file-pdf fa-2x text-danger mb-2"></i>
+                                    <div class="small">PDF</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-file-image fa-2x text-success mb-2"></i>
+                                    <div class="small">Images</div>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div class="p-3 bg-light rounded">
+                                    <i class="fas fa-file-archive fa-2x text-warning mb-2"></i>
+                                    <div class="small">Archives</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section id="features" class="py-5 bg-white">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">Enterprise-Grade Security</h2>
+            <p class="lead text-muted">Built with advanced cryptographic protocols</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                             style="width: 64px; height: 64px; background: rgba(79, 70, 229, 0.1);">
+                            <i class="fas fa-lock fa-2x" style="color: #4f46e5;"></i>
+                        </div>
+                        <h4 class="fw-bold">AES-256-GCM</h4>
+                        <p class="text-muted mb-0">
+                            Advanced Encryption Standard with 256-bit keys in Galois/Counter Mode. 
+                            Provides confidentiality, integrity, and authenticity.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                             style="width: 64px; height: 64px; background: rgba(6, 182, 212, 0.1);">
+                            <i class="fas fa-key fa-2x" style="color: #06b6d4;"></i>
+                        </div>
+                        <h4 class="fw-bold">RSA-2048 OAEP</h4>
+                        <p class="text-muted mb-0">
+                            Asymmetric encryption with optimal padding for secure key exchange. 
+                            Combines asymmetric and symmetric encryption.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                             style="width: 64px; height: 64px; background: rgba(16, 185, 129, 0.1);">
+                            <i class="fas fa-calculator fa-2x" style="color: #10b981;"></i>
+                        </div>
+                        <h4 class="fw-bold">Paillier Homomorphic</h4>
+                        <p class="text-muted mb-0">
+                            Compute on encrypted data without decryption.
+                            E(a) × E(b) = E(a + b) for privacy-preserving analytics.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                             style="width: 64px; height: 64px; background: rgba(245, 158, 11, 0.1);">
+                            <i class="fas fa-search fa-2x" style="color: #f59e0b;"></i>
+                        </div>
+                        <h4 class="fw-bold">Searchable Encryption</h4>
+                        <p class="text-muted mb-0">
+                            Search encrypted files using HMAC-SHA256 keyword tokens.
+                            Server never sees your search terms or content.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                             style="width: 64px; height: 64px; background: rgba(239, 68, 68, 0.1);">
+                            <i class="fas fa-user-lock fa-2x" style="color: #ef4444;"></i>
+                        </div>
+                        <h4 class="fw-bold">PBKDF2 600K</h4>
+                        <p class="text-muted mb-0">
+                            600,000 iterations of PBKDF2-HMAC-SHA256 for password-based encryption. 
+                            Exceeds OWASP 2024 recommendations.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6 col-lg-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body p-4">
+                        <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                             style="width: 64px; height: 64px; background: rgba(99, 102, 241, 0.1);">
+                            <i class="fas fa-fingerprint fa-2x" style="color: #6366f1;"></i>
+                        </div>
+                        <h4 class="fw-bold">SHA-256/512 Integrity</h4>
+                        <p class="text-muted mb-0">
+                            Cryptographic hashing with HMAC authentication. 
+                            Constant-time comparison prevents timing attacks.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section class="py-5" style="background: var(--light-bg);">
+    <div class="container py-5">
+        <div class="text-center mb-5">
+            <h2 class="display-5 fw-bold mb-3">How It Works</h2>
+            <p class="lead text-muted">Simple, secure, seamless</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-md-4 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                     style="width: 100px; height: 100px; background: linear-gradient(135deg, #4f46e5, #4338ca);">
+                    <span class="display-5 text-white fw-bold">1</span>
+                </div>
+                <h4 class="fw-bold">Upload</h4>
+                <p class="text-muted">
+                    Select your files. They're encrypted instantly using AES-256-GCM 
+                    before leaving your browser.
+                </p>
+            </div>
+            
+            <div class="col-md-4 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                     style="width: 100px; height: 100px; background: linear-gradient(135deg, #06b6d4, #0891b2);">
+                    <span class="display-5 text-white fw-bold">2</span>
+                </div>
+                <h4 class="fw-bold">Store</h4>
+                <p class="text-muted">
+                    Your encrypted files are stored securely. The AES key is protected 
+                    with your RSA public key.
+                </p>
+            </div>
+            
+            <div class="col-md-4 text-center">
+                <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-4"
+                     style="width: 100px; height: 100px; background: linear-gradient(135deg, #10b981, #059669);">
+                    <span class="display-5 text-white fw-bold">3</span>
+                </div>
+                <h4 class="fw-bold">Access</h4>
+                <p class="text-muted">
+                    Download and decrypt anytime with your password. 
+                    Integrity is verified automatically.
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="py-5" style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);">
+    <div class="container py-5 text-center text-white">
+        <h2 class="display-5 fw-bold mb-4">Ready to Secure Your Files?</h2>
+        <p class="lead mb-5 opacity-75">
+            Experience military-grade encryption with Homomorphic and Searchable Encryption.
+        </p>
+        <a href="{{ url_for('auth.register') }}" class="btn btn-light btn-lg px-5">
+            <i class="fas fa-user-plus me-2"></i>Create Free Account
+        </a>
+        <div class="mt-5 pt-4 border-top border-light border-opacity-25">
+            <div class="d-flex justify-content-center gap-2 flex-wrap mb-3">
+                <span class="badge bg-primary">AES-256-GCM</span>
+                <span class="badge bg-success">RSA-2048</span>
+                <span class="badge bg-info">Paillier HE</span>
+                <span class="badge bg-warning text-dark">SSE</span>
+                <span class="badge bg-danger">PBKDF2 600K</span>
+            </div>
+            <p class="mb-0 opacity-75">
+                <i class="fas fa-user-shield me-1"></i>
+                Developed by <strong>Ayeh Al-hazaimeh & Renas Abu-Sharefah</strong> | 
+                <i class="fas fa-envelope me-1"></i>ayeh.com1097@gmail.com & renasfaris2004@gmail.com
+            </p>
+        </div>
+    </div>
+</section>
+{% endblock %}
+

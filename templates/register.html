@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Register{% endblock %}
+
+{% block content %}
+<div class="min-vh-100 d-flex align-items-center" style="background: linear-gradient(135deg, #4f46e5 0%, #4338ca 100%);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-lg" style="border-radius: 1rem;">
+                    <div class="card-body p-5">
+                        <div class="text-center mb-4">
+                            <div class="d-inline-flex align-items-center justify-content-center rounded-circle mb-3"
+                                 style="width: 80px; height: 80px; background: linear-gradient(135deg, #4f46e5, #06b6d4);">
+                                <i class="fas fa-user-plus fa-2x text-white"></i>
+                            </div>
+                            <h2 class="fw-bold">Create Account</h2>
+                            <p class="text-muted">Your encryption keys will be generated automatically</p>
+                        </div>
+                        
+                        <form method="POST" action="{{ url_for('auth.register') }}">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Username</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-user text-muted"></i>
+                                        </span>
+                                        <input type="text" name="username" class="form-control border-start-0 ps-0" 
+                                               placeholder="Choose username" required autofocus>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label class="form-label fw-semibold">Email Address</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text bg-light border-end-0">
+                                            <i class="fas fa-envelope text-muted"></i>
+                                        </span>
+                                        <input type="email" name="email" class="form-control border-start-0 ps-0" 
+                                               placeholder="your@email.com" required>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-semibold">Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="fas fa-lock text-muted"></i>
+                                    </span>
+                                    <input type="password" name="password" id="password" class="form-control border-start-0 ps-0" 
+                                           placeholder="Minimum 8 characters" required minlength="8"
+                                           onkeyup="checkPasswordStrength(this.value)">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                        <i class="fas fa-eye"></i>
+                                    </button>
+                                </div>
+                                <div class="mt-2">
+                                    <div class="progress" style="height: 4px;">
+                                        <div class="progress-bar" id="passwordStrength" role="progressbar" style="width: 0%"></div>
+                                    </div>
+                                    <small class="text-muted" id="passwordFeedback">Enter at least 8 characters</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <label class="form-label fw-semibold">Confirm Password</label>
+                                <div class="input-group">
+                                    <span class="input-group-text bg-light border-end-0">
+                                        <i class="fas fa-lock text-muted"></i>
+                                    </span>
+                                    <input type="password" name="confirm_password" class="form-control border-start-0 ps-0" 
+                                           placeholder="Repeat password" required>
+                                </div>
+                            </div>
+                            
+                            <div class="alert alert-info d-flex align-items-start mb-4" style="border-radius: 0.75rem;">
+                                <i class="fas fa-key me-3 mt-1" style="color: #4f46e5;"></i>
+                                <div>
+                                    <strong>Security Notice</strong><br>
+                                    <small>An RSA-2048 key pair will be generated for you. Your private key will be encrypted with your password. 
+                                    <strong>If you forget your password, your files cannot be recovered.</strong></small>
+                                </div>
+                            </div>
+                            
+                            <div class="form-check mb-4">
+                                <input type="checkbox" class="form-check-input" id="terms" required>
+                                <label class="form-check-label" for="terms">
+                                    I agree to the <a href="#" class="text-decoration-none">Terms of Service</a> 
+                                    and <a href="#" class="text-decoration-none">Privacy Policy</a>
+                                </label>
+                            </div>
+                            
+                            <button type="submit" class="btn btn-primary w-100 py-2 mb-4">
+                                <i class="fas fa-shield-halved me-2"></i>Create Secure Account
+                            </button>
+                            
+                            <div class="text-center">
+                                <p class="text-muted mb-0">
+                                    Already have an account? 
+                                    <a href="{{ url_for('auth.login') }}" class="fw-semibold text-decoration-none">Sign in</a>
+                                </p>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                
+                <div class="text-center mt-4">
+                    <span class="encryption-badge">
+                        <i class="fas fa-lock"></i> RSA-2048 Key Generation
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function togglePassword(button) {
+    const input = button.parentElement.querySelector('input');
+    const icon = button.querySelector('i');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+
+function checkPasswordStrength(password) {
+    const progressBar = document.getElementById('passwordStrength');
+    const feedback = document.getElementById('passwordFeedback');
+    
+    let strength = 0;
+    let tips = [];
+    
+    if (password.length >= 8) strength += 25;
+    else tips.push('at least 8 characters');
+    
+    if (password.match(/[a-z]/)) strength += 25;
+    else tips.push('lowercase letters');
+    
+    if (password.match(/[A-Z]/)) strength += 25;
+    else tips.push('uppercase letters');
+    
+    if (password.match(/[0-9]/) || password.match(/[^a-zA-Z0-9]/)) strength += 25;
+    else tips.push('numbers or symbols');
+    
+    progressBar.style.width = strength + '%';
+    
+    if (strength < 50) {
+        progressBar.className = 'progress-bar bg-danger';
+        feedback.innerHTML = 'Weak - add ' + tips.join(', ');
+    } else if (strength < 75) {
+        progressBar.className = 'progress-bar bg-warning';
+        feedback.innerHTML = 'Fair - add ' + tips.join(', ');
+    } else if (strength < 100) {
+        progressBar.className = 'progress-bar bg-info';
+        feedback.innerHTML = 'Good - add ' + tips.join(', ');
+    } else {
+        progressBar.className = 'progress-bar bg-success';
+        feedback.innerHTML = '<i class="fas fa-check-circle me-1"></i>Strong password';
+    }
+}
+</script>
+{% endblock %}

@@ -1,0 +1,759 @@
+{% extends "base.html" %}
+
+{% block title %}Upload Files{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Upload Area Styles */
+    .upload-container {
+        max-width: 900px;
+        margin: 2rem auto;
+    }
+    
+    .upload-header {
+        text-align: center;
+        margin-bottom: 3rem;
+    }
+    
+    .upload-title {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.5rem;
+    }
+    
+    .upload-subtitle {
+        color: #64748b;
+        font-size: 1.1rem;
+    }
+    
+    .drop-zone {
+        border: 3px dashed #cbd5e1;
+        border-radius: 1.5rem;
+        padding: 4rem 2rem;
+        text-align: center;
+        background: white;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .drop-zone:hover {
+        border-color: #667eea;
+        background: #f8fafc;
+    }
+    
+    .drop-zone.drag-over {
+        border-color: #667eea;
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        transform: scale(1.02);
+    }
+    
+    .drop-zone-icon {
+        font-size: 5rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1.5rem;
+        animation: float 3s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-10px); }
+    }
+    
+    .drop-zone-text {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .drop-zone-hint {
+        color: #64748b;
+        margin-bottom: 2rem;
+    }
+    
+    .file-input-wrapper {
+        display: inline-block;
+    }
+    
+    .file-input {
+        display: none;
+    }
+    
+    .browse-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 1rem 2rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+    
+    .browse-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* File List */
+    .file-list {
+        margin-top: 2rem;
+        display: none;
+    }
+    
+    .file-list.show {
+        display: block;
+    }
+    
+    .file-list-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .file-list-title {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #1e293b;
+    }
+    
+    .clear-all-btn {
+        padding: 0.5rem 1rem;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.5rem;
+        color: #ef4444;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .clear-all-btn:hover {
+        background: #fef2f2;
+        border-color: #ef4444;
+    }
+    
+    .file-item {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 1rem;
+        padding: 1.25rem;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.3s;
+        animation: slideInRight 0.3s ease-out;
+    }
+    
+    @keyframes slideInRight {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+    
+    .file-item.uploading {
+        background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.05));
+        border-color: #667eea;
+    }
+    
+    .file-item.success {
+        background: rgba(16, 185, 129, 0.05);
+        border-color: #10b981;
+    }
+    
+    .file-item.error {
+        background: rgba(239, 68, 68, 0.05);
+        border-color: #ef4444;
+    }
+    
+    .file-item-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .file-item-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .file-item-name {
+        font-weight: 600;
+        color: #1e293b;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-bottom: 0.25rem;
+    }
+    
+    .file-item-size {
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+    
+    .file-item-progress {
+        flex: 1;
+        max-width: 200px;
+    }
+    
+    .progress-bar-wrapper {
+        height: 8px;
+        background: #f1f5f9;
+        border-radius: 1rem;
+        overflow: hidden;
+        margin-bottom: 0.25rem;
+    }
+    
+    .progress-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        border-radius: 1rem;
+        transition: width 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .progress-bar-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        animation: shimmer 1.5s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    
+    .progress-text {
+        font-size: 0.75rem;
+        color: #64748b;
+        font-weight: 600;
+    }
+    
+    .file-item-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .file-action-btn {
+        width: 36px;
+        height: 36px;
+        border-radius: 0.5rem;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .file-action-btn:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+    }
+    
+    .file-action-btn.remove:hover {
+        background: #fef2f2;
+        border-color: #ef4444;
+        color: #ef4444;
+    }
+    
+    /* Status Icons */
+    .status-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1rem;
+        flex-shrink: 0;
+    }
+    
+    .status-icon.uploading {
+        background: rgba(102, 126, 234, 0.1);
+        color: #667eea;
+        animation: spin 1s linear infinite;
+    }
+    
+    .status-icon.success {
+        background: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    
+    .status-icon.error {
+        background: rgba(239, 68, 68, 0.1);
+        color: #ef4444;
+    }
+    
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+    
+    /* Upload Button */
+    .upload-btn-wrapper {
+        margin-top: 2rem;
+        text-align: center;
+        display: none;
+    }
+    
+    .upload-btn-wrapper.show {
+        display: block;
+    }
+    
+    .upload-btn {
+        padding: 1rem 3rem;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 0.75rem;
+        font-size: 1.125rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s;
+        box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .upload-btn:hover:not(:disabled) {
+        transform: translateY(-2px);
+        box-shadow: 0 12px 28px rgba(102, 126, 234, 0.5);
+    }
+    
+    .upload-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    /* Encryption Info */
+    .encryption-info {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.05), rgba(5, 150, 105, 0.05));
+        border: 1px solid rgba(16, 185, 129, 0.2);
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .encryption-icon {
+        width: 48px;
+        height: 48px;
+        border-radius: 0.75rem;
+        background: rgba(16, 185, 129, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        color: #10b981;
+        flex-shrink: 0;
+    }
+    
+    .encryption-text {
+        flex: 1;
+    }
+    
+    .encryption-title {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+    
+    .encryption-desc {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin: 0;
+    }
+    
+    /* Supported Formats */
+    .supported-formats {
+        text-align: center;
+        margin-top: 2rem;
+        color: #94a3b8;
+        font-size: 0.875rem;
+    }
+    
+    .supported-formats strong {
+        color: #64748b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="upload-container">
+    <div class="upload-header">
+        <h1 class="upload-title">Upload Your Files</h1>
+        <p class="upload-subtitle">Drag and drop or click to browse files</p>
+    </div>
+    
+    <form id="uploadForm" method="POST" enctype="multipart/form-data">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        
+        <!-- Drop Zone -->
+        <div class="drop-zone" id="dropZone">
+            <div class="drop-zone-icon">
+                <i class="fas fa-cloud-upload-alt"></i>
+            </div>
+            <div class="drop-zone-text">Drop files here</div>
+            <p class="drop-zone-hint">or click to browse from your device</p>
+            <div class="file-input-wrapper">
+                <button type="button" class="browse-btn" onclick="document.getElementById('fileInput').click()">
+                    <i class="fas fa-folder-open"></i>
+                    Browse Files
+                </button>
+                <input type="file" id="fileInput" name="files" class="file-input" multiple>
+            </div>
+        </div>
+        
+        <!-- Encryption Info -->
+        <div class="encryption-info">
+            <div class="encryption-icon">
+                <i class="fas fa-shield-halved"></i>
+            </div>
+            <div class="encryption-text">
+                <div class="encryption-title">
+                    <i class="fas fa-check-circle me-1"></i>
+                    End-to-End Encryption
+                </div>
+                <p class="encryption-desc">
+                    All files are encrypted with AES-256-GCM before upload. Your data is protected with military-grade encryption.
+                </p>
+            </div>
+        </div>
+        
+        <!-- File List -->
+        <div class="file-list" id="fileList">
+            <div class="file-list-header">
+                <h3 class="file-list-title">
+                    <i class="fas fa-list me-2"></i>
+                    Selected Files (<span id="fileCount">0</span>)
+                </h3>
+                <button type="button" class="clear-all-btn" id="clearAllBtn">
+                    <i class="fas fa-trash-alt me-1"></i>
+                    Clear All
+                </button>
+            </div>
+            <div id="fileListItems"></div>
+        </div>
+        
+        <!-- Upload Button -->
+        <div class="upload-btn-wrapper" id="uploadBtnWrapper">
+            <button type="submit" class="upload-btn" id="uploadBtn">
+                <i class="fas fa-lock"></i>
+                Encrypt & Upload Files
+            </button>
+        </div>
+        
+        <!-- Supported Formats -->
+        <div class="supported-formats">
+            <strong>Supported formats:</strong> PDF, DOC, DOCX, TXT, XLS, XLSX, ZIP, RAR, JPG, PNG, and more
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileList = document.getElementById('fileList');
+    const fileListItems = document.getElementById('fileListItems');
+    const fileCount = document.getElementById('fileCount');
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const uploadBtnWrapper = document.getElementById('uploadBtnWrapper');
+    const uploadForm = document.getElementById('uploadForm');
+    
+    let selectedFiles = [];
+    
+    // Drag and drop handlers
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+    
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+    
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+    
+    function highlight() {
+        dropZone.classList.add('drag-over');
+    }
+    
+    function unhighlight() {
+        dropZone.classList.remove('drag-over');
+    }
+    
+    // Handle drop
+    dropZone.addEventListener('drop', handleDrop, false);
+    
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        handleFiles(files);
+    }
+    
+    // Handle file input change
+    fileInput.addEventListener('change', function() {
+        handleFiles(this.files);
+    });
+    
+    // Handle dropped/selected files
+    function handleFiles(files) {
+        if (files.length === 0) return;
+        
+        // Add new files to selection
+        Array.from(files).forEach(file => {
+            // Check if file already exists
+            const exists = selectedFiles.some(f => f.name === file.name && f.size === file.size);
+            if (!exists) {
+                selectedFiles.push(file);
+            }
+        });
+        
+        updateFileList();
+        showUploadControls();
+    }
+    
+    // Update file list display
+    function updateFileList() {
+        fileListItems.innerHTML = '';
+        fileCount.textContent = selectedFiles.length;
+        
+        if (selectedFiles.length === 0) {
+            fileList.classList.remove('show');
+            uploadBtnWrapper.classList.remove('show');
+            return;
+        }
+        
+        selectedFiles.forEach((file, index) => {
+            const fileItem = createFileItem(file, index);
+            fileListItems.appendChild(fileItem);
+        });
+    }
+    
+    // Create file item element
+    function createFileItem(file, index) {
+        const div = document.createElement('div');
+        div.className = 'file-item';
+        div.dataset.index = index;
+        
+        const ext = file.name.split('.').pop().toLowerCase();
+        const fileType = getFileType(ext);
+        const icon = getFileIcon(ext);
+        const iconColor = getFileIconColor(ext);
+        
+        div.innerHTML = `
+            <div class="file-item-icon" style="background: ${iconColor.bg}; color: ${iconColor.fg};">
+                <i class="${icon}"></i>
+            </div>
+            <div class="file-item-info">
+                <div class="file-item-name" title="${file.name}">${file.name}</div>
+                <div class="file-item-size">${formatFileSize(file.size)}</div>
+            </div>
+            <div class="status-icon" data-status="pending">
+                <i class="fas fa-clock"></i>
+            </div>
+            <div class="file-item-actions">
+                <button type="button" class="file-action-btn remove" onclick="removeFile(${index})">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+        `;
+        
+        return div;
+    }
+    
+    // Remove file from selection
+    function removeFile(index) {
+        selectedFiles.splice(index, 1);
+        updateFileList();
+        
+        if (selectedFiles.length === 0) {
+            hideUploadControls();
+        }
+    }
+    
+    // Clear all files
+    clearAllBtn.addEventListener('click', function() {
+        selectedFiles = [];
+        updateFileList();
+        hideUploadControls();
+    });
+    
+    // Show upload controls
+    function showUploadControls() {
+        fileList.classList.add('show');
+        uploadBtnWrapper.classList.add('show');
+    }
+    
+    // Hide upload controls
+    function hideUploadControls() {
+        fileList.classList.remove('show');
+        uploadBtnWrapper.classList.remove('show');
+    }
+    
+    // Handle form submission
+    uploadForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        if (selectedFiles.length === 0) {
+            alert('Please select files to upload');
+            return;
+        }
+        
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Encrypting & Uploading...';
+        
+        // Upload files one by one
+        for (let i = 0; i < selectedFiles.length; i++) {
+            await uploadFile(selectedFiles[i], i);
+        }
+        
+        // Reset after all uploads
+        setTimeout(() => {
+            selectedFiles = [];
+            updateFileList();
+            hideUploadControls();
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="fas fa-lock"></i> Encrypt & Upload Files';
+        }, 1500);
+    });
+    
+    // Upload individual file
+    async function uploadFile(file, index) {
+        const fileItem = document.querySelector(`.file-item[data-index="${index}"]`);
+        const statusIcon = fileItem.querySelector('.status-icon');
+        
+        // Update status to uploading
+        fileItem.classList.add('uploading');
+        statusIcon.dataset.status = 'uploading';
+        statusIcon.innerHTML = '<i class="fas fa-spinner"></i>';
+        statusIcon.classList.add('uploading');
+        
+        const formData = new FormData();
+        formData.append('files', file);
+        formData.append('csrf_token', document.querySelector('input[name="csrf_token"]').value);
+        
+        try {
+            const response = await fetch('{{ url_for("files.upload") }}', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (response.ok) {
+                // Success
+                fileItem.classList.remove('uploading');
+                fileItem.classList.add('success');
+                statusIcon.classList.remove('uploading');
+                statusIcon.classList.add('success');
+                statusIcon.innerHTML = '<i class="fas fa-check"></i>';
+            } else {
+                throw new Error('Upload failed');
+            }
+        } catch (error) {
+            // Error
+            fileItem.classList.remove('uploading');
+            fileItem.classList.add('error');
+            statusIcon.classList.remove('uploading');
+            statusIcon.classList.add('error');
+            statusIcon.innerHTML = '<i class="fas fa-times"></i>';
+        }
+    }
+    
+    // Utility functions
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+    }
+    
+    function getFileType(ext) {
+        const types = {
+            'pdf': 'pdf',
+            'doc': 'doc', 'docx': 'doc',
+            'jpg': 'img', 'jpeg': 'img', 'png': 'img', 'gif': 'img',
+            'zip': 'zip', 'rar': 'zip',
+            'txt': 'txt',
+            'xls': 'xls', 'xlsx': 'xls'
+        };
+        return types[ext] || 'default';
+    }
+    
+    function getFileIcon(ext) {
+        const icons = {
+            'pdf': 'fas fa-file-pdf',
+            'doc': 'fas fa-file-word', 'docx': 'fas fa-file-word',
+            'jpg': 'fas fa-file-image', 'jpeg': 'fas fa-file-image', 'png': 'fas fa-file-image', 'gif': 'fas fa-file-image',
+            'zip': 'fas fa-file-archive', 'rar': 'fas fa-file-archive',
+            'txt': 'fas fa-file-alt',
+            'xls': 'fas fa-file-excel', 'xlsx': 'fas fa-file-excel'
+        };
+        return icons[ext] || 'fas fa-file';
+    }
+    
+    function getFileIconColor(ext) {
+        const colors = {
+            'pdf': { bg: '#fee2e2', fg: '#dc2626' },
+            'doc': { bg: '#dbeafe', fg: '#2563eb' },
+            'docx': { bg: '#dbeafe', fg: '#2563eb' },
+            'jpg': { bg: '#d1fae5', fg: '#059669' },
+            'jpeg': { bg: '#d1fae5', fg: '#059669' },
+            'png': { bg: '#d1fae5', fg: '#059669' },
+            'gif': { bg: '#d1fae5', fg: '#059669' },
+            'zip': { bg: '#fef3c7', fg: '#d97706' },
+            'rar': { bg: '#fef3c7', fg: '#d97706' },
+            'txt': { bg: '#f1f5f9', fg: '#64748b' },
+            'xls': { bg: '#dcfce7', fg: '#16a34a' },
+            'xlsx': { bg: '#dcfce7', fg: '#16a34a' }
+        };
+        return colors[ext] || { bg: '#f1f5f9', fg: '#64748b' };
+    }
+</script>
+{% endblock %}

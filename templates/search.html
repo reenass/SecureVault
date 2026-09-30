@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}Search Files - Secure Cloud Storage{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Search Header -->
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle p-3 mb-3">
+                    <i class="fas fa-search fa-2x text-primary"></i>
+                </div>
+                <h2 class="fw-bold">Encrypted File Search</h2>
+                <p class="text-muted">Search your encrypted files securely using Symmetric Searchable Encryption (SSE)</p>
+            </div>
+
+            <!-- Info Alert -->
+            <div class="alert alert-info border-0 mb-4">
+                <div class="d-flex">
+                    <div class="me-3">
+                        <i class="fas fa-info-circle fa-lg"></i>
+                    </div>
+                    <div>
+                        <h6 class="alert-heading mb-1">How Searchable Encryption Works</h6>
+                        <small>Your files are indexed using encrypted keyword tokens. The server cannot see your actual search terms or file contents - only you can decrypt the results.</small>
+                    </div>
+                </div>
+            </div>
+
+            {% if needs_setup %}
+            <!-- Setup Required -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-key fa-3x text-warning mb-3"></i>
+                    <h5>Search Indexing Not Enabled</h5>
+                    <p class="text-muted mb-4">You need to enable search indexing to search your files.</p>
+                    <a href="{{ url_for('main.settings') }}" class="btn btn-primary">
+                        <i class="fas fa-cog me-2"></i>Enable in Settings
+                    </a>
+                </div>
+            </div>
+            {% else %}
+            <!-- Search Form -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-4">
+                    <form method="POST" action="{{ url_for('search_enhanced.full_search') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <!-- Search Input -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">Search Query</label>
+                            <div class="input-group input-group-lg">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="fas fa-search text-muted"></i>
+                                </span>
+                                <input type="text" name="query" class="form-control border-start-0" 
+                                       placeholder="Enter keywords to search..." 
+                                       value="{{ query or '' }}" required autofocus>
+                            </div>
+                            <div class="form-text">
+                                <i class="fas fa-lightbulb me-1"></i>
+                                Try searching for document names, content keywords, or file types
+                            </div>
+                        </div>
+
+                        {% if need_password %}
+                        <!-- Password for Decryption -->
+                        <div class="mb-4">
+                            <label class="form-label fw-semibold">
+                                <i class="fas fa-lock me-1"></i>Account Password
+                            </label>
+                            <input type="password" name="password" class="form-control" 
+                                   placeholder="Enter your account password to search" required>
+                            <div class="form-text">
+                                Required to generate secure search tokens
+                            </div>
+                        </div>
+                        {% endif %}
+
+                        <button type="submit" class="btn btn-primary btn-lg w-100">
+                            <i class="fas fa-search me-2"></i>Search Encrypted Files
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Search Tips -->
+            <div class="card bg-light border-0">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>Search Tips
+                    </h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <i class="fas fa-check text-success me-2 mt-1"></i>
+                                <small>Use specific keywords from your documents</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <i class="fas fa-check text-success me-2 mt-1"></i>
+                                <small>Search by filename or content</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <i class="fas fa-check text-success me-2 mt-1"></i>
+                                <small>Multiple keywords improve accuracy</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex">
+                                <i class="fas fa-check text-success me-2 mt-1"></i>
+                                <small>Text files are fully indexed</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Security Note -->
+            <div class="text-center mt-4">
+                <small class="text-muted">
+                    <i class="fas fa-shield-alt me-1"></i>
+                    Powered by Symmetric Searchable Encryption (SSE) with HMAC-SHA256 tokens
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

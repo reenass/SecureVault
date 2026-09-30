@@ -1,0 +1,489 @@
+{% extends "base.html" %}
+
+{% block title %}Search Results - Secure Cloud Storage{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-card {
+        transition: all 0.2s;
+        border: 1px solid #e9ecef;
+    }
+    .result-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        border-color: #667eea;
+    }
+    .match-badge {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+    .score-bar {
+        height: 6px;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .filter-sidebar {
+        position: sticky;
+        top: 20px;
+    }
+    .highlight {
+        background: #fff3cd;
+        padding: 1px 3px;
+        border-radius: 3px;
+    }
+    .password-notice {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb mb-2">
+                    <li class="breadcrumb-item"><a href="{{ url_for('main.dashboard') }}">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="{{ url_for('search_enhanced.search_page') }}">Search</a></li>
+                    <li class="breadcrumb-item active">Results</li>
+                </ol>
+            </nav>
+            <h2 class="fw-bold mb-1">
+                <i class="fas fa-search me-2 text-primary"></i>Search Results
+            </h2>
+            <p class="text-muted mb-0">
+                Found <strong class="text-primary">{{ total_results }}</strong> files matching 
+                "<strong>{{ query }}</strong>"
+            </p>
+        </div>
+        <a href="{{ url_for('search_enhanced.search_page') }}" class="btn btn-outline-primary">
+            <i class="fas fa-search me-2"></i>New Search
+        </a>
+    </div>
+
+    {% if need_password and has_encrypted_search %}
+    <!-- Password Required Notice -->
+    <div class="password-notice mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 class="mb-2">
+                    <i class="fas fa-lock me-2"></i>Unlock Full Search
+                </h5>
+                <p class="mb-0 opacity-90">
+                    These results are from filename matching only. Enter your password to search 
+                    encrypted file contents for more comprehensive results.
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#passwordModal">
+                    <i class="fas fa-unlock me-2"></i>Search Contents
+                </button>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if password_error %}
+    <div class="alert alert-danger mb-4">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        Invalid password. Please try again with your correct account password.
+    </div>
+    {% endif %}
+
+    <div class="row">
+        <!-- Sidebar Filters -->
+        <div class="col-lg-3 mb-4">
+            <div class="filter-sidebar">
+                <!-- Active Filters -->
+                {% if parsed_query and (parsed_query.file_types or parsed_query.date_filter or parsed_query.size_filter) %}
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-filter me-2 text-muted"></i>Active Filters
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        {% if parsed_query.file_types %}
+                        {% for ft in parsed_query.file_types %}
+                        <span class="badge bg-primary me-1 mb-1">
+                            filetype:{{ ft }}
+                            <a href="#" onclick="removeFilter('filetype:{{ ft }}')" class="text-white ms-1">×</a>
+                        </span>
+                        {% endfor %}
+                        {% endif %}
+                        
+                        {% if parsed_query.date_filter %}
+                        <span class="badge bg-success me-1 mb-1">
+                            date:{{ parsed_query.date_filter }}
+                            <a href="#" onclick="removeFilter('date:{{ parsed_query.date_filter }}')" class="text-white ms-1">×</a>
+                        </span>
+                        {% endif %}
+                        
+                        {% if parsed_query.exclude_keywords %}
+                        {% for ex in parsed_query.exclude_keywords %}
+                        <span class="badge bg-danger me-1 mb-1">
+                            -{{ ex }}
+                        </span>
+                        {% endfor %}
+                        {% endif %}
+                        
+                        <div class="mt-2">
+                            <a href="{{ url_for('search_enhanced.full_search', q=parsed_query.keywords|join(' ')) }}" class="text-primary small">
+                                Clear all filters
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Quick Filters -->
+                <div class="card shadow-sm mb-3">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-bolt me-2 text-warning"></i>Quick Filters
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">File Type</label>
+                            <select class="form-select form-select-sm" onchange="applyFilter('filetype', this.value)">
+                                <option value="">All Types</option>
+                                <option value="pdf">PDF</option>
+                                <option value="doc">Word Documents</option>
+                                <option value="txt">Text Files</option>
+                                <option value="py">Python</option>
+                                <option value="js">JavaScript</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label class="form-label small text-muted">Date</label>
+                            <select class="form-select form-select-sm" onchange="applyFilter('date', this.value)">
+                                <option value="">Any Time</option>
+                                <option value="today">Today</option>
+                                <option value="week">This Week</option>
+                                <option value="month">This Month</option>
+                                <option value="year">This Year</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="form-label small text-muted">Size</label>
+                            <select class="form-select form-select-sm" onchange="applyFilter('size', this.value)">
+                                <option value="">Any Size</option>
+                                <option value=">1mb">Larger than 1MB</option>
+                                <option value=">10mb">Larger than 10MB</option>
+                                <option value="<1mb">Smaller than 1MB</option>
+                                <option value="<100kb">Smaller than 100KB</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Search Stats -->
+                <div class="card shadow-sm">
+                    <div class="card-header bg-white">
+                        <h6 class="mb-0">
+                            <i class="fas fa-chart-bar me-2 text-info"></i>Search Stats
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Results found</span>
+                            <span class="fw-bold">{{ total_results }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span class="text-muted small">Keywords searched</span>
+                            <span class="fw-bold">{{ parsed_query.keywords|length if parsed_query else 0 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between">
+                            <span class="text-muted small">Search type</span>
+                            <span class="badge bg-{{ 'success' if not need_password else 'warning' }}">
+                                {{ 'Full' if not need_password else 'Filename' }}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Results -->
+        <div class="col-lg-9">
+            {% if results %}
+            <!-- Sort Options -->
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <span class="text-muted">Showing {{ results|length }} of {{ total_results }} results</span>
+                </div>
+                <div class="btn-group btn-group-sm">
+                    <button class="btn btn-outline-secondary active" onclick="sortResults('score')">
+                        <i class="fas fa-star me-1"></i>Relevance
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="sortResults('date')">
+                        <i class="fas fa-calendar me-1"></i>Date
+                    </button>
+                    <button class="btn btn-outline-secondary" onclick="sortResults('name')">
+                        <i class="fas fa-font me-1"></i>Name
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Results List -->
+            <div class="results-list">
+                {% for result in results %}
+                <div class="card result-card mb-3">
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <!-- File Icon -->
+                                {% set ext = result.file.file_extension|lower %}
+                                <div class="bg-light rounded-3 p-3">
+                                    {% if ext in ['pdf'] %}
+                                    <i class="fas fa-file-pdf fa-2x text-danger"></i>
+                                    {% elif ext in ['doc', 'docx'] %}
+                                    <i class="fas fa-file-word fa-2x text-primary"></i>
+                                    {% elif ext in ['xls', 'xlsx'] %}
+                                    <i class="fas fa-file-excel fa-2x text-success"></i>
+                                    {% elif ext in ['jpg', 'jpeg', 'png', 'gif'] %}
+                                    <i class="fas fa-file-image fa-2x text-info"></i>
+                                    {% elif ext in ['txt', 'md'] %}
+                                    <i class="fas fa-file-alt fa-2x text-secondary"></i>
+                                    {% elif ext in ['py', 'js', 'java', 'c', 'cpp'] %}
+                                    <i class="fas fa-file-code fa-2x text-warning"></i>
+                                    {% elif ext in ['zip', 'rar', '7z'] %}
+                                    <i class="fas fa-file-archive fa-2x text-purple"></i>
+                                    {% else %}
+                                    <i class="fas fa-file fa-2x text-muted"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="col">
+                                <div class="d-flex align-items-center mb-1">
+                                    <h6 class="mb-0 me-2">{{ result.file.original_filename }}</h6>
+                                    <span class="match-badge badge bg-{{ 'success' if result.match_type == 'content' else 'info' }}">
+                                        {{ result.match_type }}
+                                    </span>
+                                </div>
+                                
+                                <div class="text-muted small mb-2">
+                                    <span class="me-3">
+                                        <i class="fas fa-hdd me-1"></i>{{ result.file.format_size() }}
+                                    </span>
+                                    <span class="me-3">
+                                        <i class="fas fa-calendar me-1"></i>{{ result.file.created_at.strftime('%b %d, %Y') }}
+                                    </span>
+                                    <span>
+                                        <i class="fas fa-key me-1"></i>{{ result.keywords_matched }} keyword{% if result.keywords_matched != 1 %}s{% endif %} matched
+                                    </span>
+                                </div>
+                                
+                                <!-- Relevance Score -->
+                                <div class="d-flex align-items-center">
+                                    <span class="text-muted small me-2">Relevance:</span>
+                                    <div class="score-bar bg-light flex-grow-1 me-2" style="max-width: 150px;">
+                                        <div class="h-100 bg-{{ 'success' if result.score >= 80 else 'warning' if result.score >= 50 else 'info' }}" 
+                                             style="width: {{ result.score }}%"></div>
+                                    </div>
+                                    <span class="small fw-bold">{{ result.score }}%</span>
+                                </div>
+                            </div>
+                            
+                            <div class="col-auto">
+                                <div class="btn-group">
+                                    <a href="{{ url_for('files.download', file_uuid=result.file.uuid) }}" 
+                                       class="btn btn-primary btn-sm" title="Download">
+                                        <i class="fas fa-download"></i>
+                                    </a>
+                                    <a href="{{ url_for('files.verify_integrity', file_uuid=result.file.uuid) }}" 
+                                       class="btn btn-outline-success btn-sm" title="Verify">
+                                        <i class="fas fa-check-circle"></i>
+                                    </a>
+                                    <a href="{{ url_for('files.share', file_uuid=result.file.uuid) }}" 
+                                       class="btn btn-outline-info btn-sm" title="Share">
+                                        <i class="fas fa-share-alt"></i>
+                                    </a>
+                                    <button class="btn btn-outline-secondary btn-sm" 
+                                            onclick="showFileDetails('{{ result.file.uuid }}')" title="Details">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if total_pages and total_pages > 1 %}
+            <nav aria-label="Search results pagination" class="mt-4">
+                <ul class="pagination justify-content-center">
+                    <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('search_enhanced.full_search', q=query, page=page-1) }}">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                    </li>
+                    
+                    {% for p in range(1, total_pages + 1) %}
+                    {% if p == 1 or p == total_pages or (p >= page - 2 and p <= page + 2) %}
+                    <li class="page-item {% if p == page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('search_enhanced.full_search', q=query, page=p) }}">{{ p }}</a>
+                    </li>
+                    {% elif p == page - 3 or p == page + 3 %}
+                    <li class="page-item disabled"><span class="page-link">...</span></li>
+                    {% endif %}
+                    {% endfor %}
+                    
+                    <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                        <a class="page-link" href="{{ url_for('search_enhanced.full_search', q=query, page=page+1) }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            {% endif %}
+            
+            {% else %}
+            <!-- No Results -->
+            <div class="card shadow-sm">
+                <div class="card-body text-center py-5">
+                    <i class="fas fa-search fa-4x text-muted mb-4 opacity-50"></i>
+                    <h4>No Results Found</h4>
+                    <p class="text-muted mb-4">
+                        No files matched your search query "<strong>{{ query }}</strong>".
+                    </p>
+                    
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="alert alert-light text-start">
+                                <h6><i class="fas fa-lightbulb text-warning me-2"></i>Suggestions:</h6>
+                                <ul class="mb-0">
+                                    <li>Check your spelling</li>
+                                    <li>Try different or fewer keywords</li>
+                                    <li>Remove filters to broaden your search</li>
+                                    {% if need_password %}
+                                    <li>Enter your password to search encrypted file contents</li>
+                                    {% endif %}
+                                    <li>Make sure your files are indexed in Settings</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-center gap-2 mt-3">
+                        <a href="{{ url_for('search_enhanced.search_page') }}" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i>New Search
+                        </a>
+                        <a href="{{ url_for('main.my_files') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-folder me-2"></i>Browse Files
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Password Modal -->
+<div class="modal fade" id="passwordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-lock me-2"></i>Enter Password for Full Search
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ url_for('search_enhanced.full_search') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="query" value="{{ query }}">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Your password generates secure search tokens to find matches in encrypted file contents.
+                        <strong>Use the same password you used when indexing files.</strong>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Account Password</label>
+                        <input type="password" name="password" class="form-control" required
+                               placeholder="Enter your account password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Search Content
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- File Details Modal -->
+<div class="modal fade" id="fileDetailsModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">File Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="fileDetailsContent">
+                <div class="text-center py-4">
+                    <i class="fas fa-spinner fa-spin fa-2x"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function applyFilter(type, value) {
+    if (!value) return;
+    
+    const currentQuery = '{{ query }}';
+    let newQuery = currentQuery;
+    
+    // Remove existing filter of same type
+    newQuery = newQuery.replace(new RegExp(type + ':\\S+', 'gi'), '').trim();
+    
+    // Add new filter
+    newQuery = newQuery + ' ' + type + ':' + value;
+    
+    window.location.href = '{{ url_for("search_enhanced.full_search") }}?q=' + encodeURIComponent(newQuery.trim());
+}
+
+function removeFilter(filter) {
+    const currentQuery = '{{ query }}';
+    const newQuery = currentQuery.replace(filter, '').trim();
+    window.location.href = '{{ url_for("search_enhanced.full_search") }}?q=' + encodeURIComponent(newQuery);
+}
+
+function sortResults(by) {
+    // Client-side sorting would require JS framework
+    // For now, this is a placeholder for server-side sorting
+    alert('Sorting by ' + by + ' - implement server-side');
+}
+
+function showFileDetails(uuid) {
+    const modal = new bootstrap.Modal(document.getElementById('fileDetailsModal'));
+    modal.show();
+    
+    // Fetch file details via API (placeholder)
+    document.getElementById('fileDetailsContent').innerHTML = `
+        <div class="text-center py-4">
+            <p>File UUID: ${uuid}</p>
+            <p class="text-muted">Detailed view coming soon...</p>
+        </div>
+    `;
+}
+</script>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends "base.html" %}
+
+{% block title %}Activity Logs{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Admin Sidebar -->
+        <div class="col-lg-2 col-md-3 mb-4">
+            <div class="sidebar rounded-3">
+                <div class="px-3 py-2">
+                    <span class="badge bg-danger">Admin Panel</span>
+                </div>
+                <hr class="my-2">
+                <a href="{{ url_for('admin.admin_dashboard') }}" class="sidebar-link">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin.admin_users') }}" class="sidebar-link">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a href="{{ url_for('admin.activity_logs') }}" class="sidebar-link active">
+                    <i class="fas fa-history"></i> Activity Logs
+                </a>
+                <hr class="my-2">
+                <a href="{{ url_for('main.dashboard') }}" class="sidebar-link">
+                    <i class="fas fa-arrow-left"></i> Back to App
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <div class="card fade-in">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Activity Logs
+                    </h5>
+                    <span class="badge bg-primary">{{ logs.total }} total entries</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Action</th>
+                                    <th>User</th>
+                                    <th>Resource</th>
+                                    <th>Status</th>
+                                    <th>IP Address</th>
+                                    <th>Timestamp</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for log in logs.items %}
+                                <tr class="fade-in">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center me-2
+                                                        {% if log.status == 'success' %}bg-success{% elif log.status == 'failed' %}bg-danger{% else %}bg-warning{% endif %}" 
+                                                 style="width: 32px; height: 32px;">
+                                                <i class="fas fa-{% if log.action == 'login' %}sign-in-alt{% elif log.action == 'logout' %}sign-out-alt{% elif log.action == 'upload' %}upload{% elif log.action == 'download' %}download{% elif log.action == 'delete' %}trash{% elif log.action == 'share' %}share-alt{% else %}circle{% endif %} text-white small"></i>
+                                            </div>
+                                            <span class="fw-medium">{{ log.action | replace('_', ' ') | title }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if log.user %}
+                                        {{ log.user.username }}
+                                        {% else %}
+                                        <span class="text-muted">System</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if log.resource_name %}
+                                        <span class="badge bg-light text-dark">{{ log.resource_type }}</span>
+                                        {{ log.resource_name | truncate(30) }}
+                                        {% else %}
+                                        <span class="text-muted">-</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-{{ 'success' if log.status == 'success' else 'danger' if log.status == 'failed' else 'warning' }}">
+                                            {{ log.status | title }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <code>{{ log.ip_address or '-' }}</code>
+                                    </td>
+                                    <td>{{ format_datetime(log.created_at) }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Pagination -->
+                {% if logs.pages > 1 %}
+                <div class="card-footer">
+                    <nav>
+                        <ul class="pagination justify-content-center mb-0">
+                            {% if logs.has_prev %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.activity_logs', page=logs.prev_num) }}">
+                                    <i class="fas fa-chevron-left"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            
+                            {% for page in logs.iter_pages(left_edge=2, left_current=2, right_current=2, right_edge=2) %}
+                                {% if page %}
+                                <li class="page-item {% if page == logs.page %}active{% endif %}">
+                                    <a class="page-link" href="{{ url_for('admin.activity_logs', page=page) }}">{{ page }}</a>
+                                </li>
+                                {% else %}
+                                <li class="page-item disabled">
+                                    <span class="page-link">...</span>
+                                </li>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if logs.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="{{ url_for('admin.activity_logs', page=logs.next_num) }}">
+                                    <i class="fas fa-chevron-right"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

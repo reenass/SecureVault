@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Share File{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-share-alt me-2 text-primary"></i>
+                        Share File
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- File Info -->
+                    <div class="d-flex align-items-center mb-4 p-3 bg-light rounded">
+                        <div class="file-icon default me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                            <i class="fas {{ file.get_file_type_icon() }}"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">{{ file.original_filename }}</h6>
+                            <span class="text-muted">{{ file.format_size() }} • {{ file.encryption_algorithm }}</span>
+                        </div>
+                    </div>
+                    
+                    <form action="{{ url_for('files.share', file_uuid=file.uuid) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        
+                        <!-- Share Type -->
+                        <div class="mb-4">
+                            <label class="form-label fw-medium">Share Method</label>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <div class="form-check border rounded-3 p-3 h-100">
+                                        <input class="form-check-input" type="radio" name="share_type" 
+                                               id="shareLink" value="link" checked>
+                                        <label class="form-check-label w-100" for="shareLink">
+                                            <strong class="d-block">
+                                                <i class="fas fa-link text-primary me-1"></i> Share Link
+                                            </strong>
+                                            <small class="text-muted">
+                                                Generate a shareable link that anyone with the link can access.
+                                            </small>
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-check border rounded-3 p-3 h-100">
+                                        <input class="form-check-input" type="radio" name="share_type" 
+                                               id="shareUser" value="user">
+                                        <label class="form-check-label w-100" for="shareUser">
+                                            <strong class="d-block">
+                                                <i class="fas fa-user text-success me-1"></i> Share with User
+                                            </strong>
+                                            <small class="text-muted">
+                                                Share directly with a registered user by email.
+                                            </small>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- User Share Options -->
+                        <div id="userShareOptions" class="d-none">
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">
+                                    <i class="fas fa-envelope me-1"></i> Recipient Email
+                                </label>
+                                <input type="email" name="share_email" class="form-control" 
+                                       placeholder="Enter user's email address">
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" name="can_download" 
+                                           id="canDownload" checked>
+                                    <label class="form-check-label" for="canDownload">
+                                        Allow download
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Link Share Options -->
+                        <div id="linkShareOptions">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium">
+                                        <i class="fas fa-calendar me-1"></i> Expires After
+                                    </label>
+                                    <select name="expires_days" class="form-select">
+                                        <option value="1">1 day</option>
+                                        <option value="7" selected>7 days</option>
+                                        <option value="30">30 days</option>
+                                        <option value="90">90 days</option>
+                                        <option value="0">Never</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label fw-medium">
+                                        <i class="fas fa-download me-1"></i> Max Downloads
+                                    </label>
+                                    <input type="number" name="max_downloads" class="form-control" 
+                                           min="0" placeholder="Unlimited">
+                                    <div class="form-text">Leave empty for unlimited</div>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-medium">
+                                    <i class="fas fa-lock me-1"></i> Link Password (Optional)
+                                </label>
+                                <input type="password" name="link_password" class="form-control" 
+                                       placeholder="Add password protection">
+                                <div class="form-text">Recipients will need this password to access the file</div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle me-2"></i>
+                            <strong>Note:</strong> Shared files remain encrypted. Recipients will need appropriate 
+                            credentials to decrypt the file content.
+                        </div>
+                        
+                        <div class="d-flex gap-2">
+                            <a href="{{ url_for('main.my_files') }}" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-share-alt me-1"></i> Create Share
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('input[name="share_type"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const linkOptions = document.getElementById('linkShareOptions');
+            const userOptions = document.getElementById('userShareOptions');
+            
+            if (this.value === 'user') {
+                linkOptions.classList.add('d-none');
+                userOptions.classList.remove('d-none');
+            } else {
+                linkOptions.classList.remove('d-none');
+                userOptions.classList.add('d-none');
+            }
+        });
+    });
+</script>
+{% endblock %}

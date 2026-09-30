@@ -1,0 +1,768 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Modern Dashboard Styles */
+    :root {
+        --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+        --warning-gradient: linear-gradient(135deg, #ff9a56 0%, #ff6a88 100%);
+        --primary-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    }
+    
+    .dashboard-header {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 1.5rem;
+        padding: 3rem 2rem;
+        margin-bottom: 2rem;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .dashboard-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 40%;
+        height: 200%;
+        background: rgba(255, 255, 255, 0.05);
+        transform: rotate(15deg);
+    }
+    
+    .welcome-text {
+        font-size: 2.5rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+    }
+    
+    .welcome-subtitle {
+        font-size: 1.1rem;
+        opacity: 0.9;
+    }
+    
+    /* Enhanced Stat Cards */
+    .stat-card-enhanced {
+        background: white;
+        border-radius: 1.25rem;
+        padding: 2rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(0, 0, 0, 0.05);
+    }
+    
+    .stat-card-enhanced:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+    }
+    
+    .stat-card-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: var(--accent-gradient);
+    }
+    
+    .stat-icon-wrapper {
+        width: 64px;
+        height: 64px;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+        position: relative;
+    }
+    
+    .stat-icon-wrapper.primary {
+        background: linear-gradient(135deg, rgba(79, 70, 229, 0.1), rgba(124, 58, 237, 0.1));
+        color: #4f46e5;
+    }
+    
+    .stat-icon-wrapper.success {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
+        color: #10b981;
+    }
+    
+    .stat-icon-wrapper.warning {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.1), rgba(217, 119, 6, 0.1));
+        color: #f59e0b;
+    }
+    
+    .stat-icon-wrapper.info {
+        background: linear-gradient(135deg, rgba(6, 182, 212, 0.1), rgba(8, 145, 178, 0.1));
+        color: #06b6d4;
+    }
+    
+    .stat-number {
+        font-size: 2.5rem;
+        font-weight: 800;
+        background: var(--accent-gradient);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 0.25rem;
+    }
+    
+    .stat-label {
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    /* Quick Actions */
+    .quick-action-card {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        text-align: center;
+        transition: all 0.3s;
+        cursor: pointer;
+        border: 2px solid transparent;
+        text-decoration: none;
+        display: block;
+    }
+    
+    .quick-action-card:hover {
+        transform: translateY(-4px);
+        border-color: #667eea;
+        box-shadow: 0 12px 24px -10px rgba(102, 126, 234, 0.3);
+    }
+    
+    .quick-action-icon {
+        width: 56px;
+        height: 56px;
+        margin: 0 auto 1rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        background: var(--accent-gradient);
+        color: white;
+    }
+    
+    .quick-action-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .quick-action-desc {
+        font-size: 0.875rem;
+        color: #64748b;
+        margin: 0;
+    }
+    
+    /* Search Bar Enhanced */
+    .search-bar-enhanced {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+    
+    .search-bar-enhanced input {
+        width: 100%;
+        padding: 1rem 3rem 1rem 3.5rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 1rem;
+        font-size: 1rem;
+        transition: all 0.3s;
+        background: white;
+    }
+    
+    .search-bar-enhanced input:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+    }
+    
+    .search-bar-enhanced i {
+        position: absolute;
+        left: 1.25rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        font-size: 1.25rem;
+    }
+    
+    .search-clear {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0.5rem;
+        font-size: 1rem;
+        display: none;
+    }
+    
+    .search-clear.show {
+        display: block;
+    }
+    
+    /* File Grid Enhanced */
+    .file-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    
+    .file-card-enhanced {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+        border: 1px solid #e2e8f0;
+        position: relative;
+    }
+    
+    .file-card-enhanced:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.15);
+        border-color: #667eea;
+    }
+    
+    .file-type-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .file-icon-large {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 1rem;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+    }
+    
+    .file-name {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .file-meta {
+        font-size: 0.875rem;
+        color: #64748b;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 0.75rem;
+    }
+    
+    .file-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
+    }
+    
+    .file-action-btn {
+        flex: 1;
+        padding: 0.5rem;
+        border: 1px solid #e2e8f0;
+        background: white;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #64748b;
+    }
+    
+    .file-action-btn:hover {
+        background: #f8fafc;
+        color: #4f46e5;
+        border-color: #4f46e5;
+    }
+    
+    /* Activity Timeline */
+    .activity-timeline {
+        position: relative;
+        padding-left: 2rem;
+    }
+    
+    .activity-item {
+        position: relative;
+        padding-bottom: 2rem;
+    }
+    
+    .activity-item::before {
+        content: '';
+        position: absolute;
+        left: -1.875rem;
+        top: 0.5rem;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #667eea;
+        border: 3px solid #e8eafd;
+    }
+    
+    .activity-item::after {
+        content: '';
+        position: absolute;
+        left: -1.5rem;
+        top: 1.25rem;
+        width: 2px;
+        height: calc(100% - 1rem);
+        background: #e2e8f0;
+    }
+    
+    .activity-item:last-child::after {
+        display: none;
+    }
+    
+    .activity-content {
+        background: white;
+        padding: 1rem;
+        border-radius: 0.75rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .activity-title {
+        font-weight: 600;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+    }
+    
+    .activity-time {
+        font-size: 0.875rem;
+        color: #94a3b8;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state-desc {
+        color: #64748b;
+        margin-bottom: 2rem;
+    }
+    
+    /* Animations */
+    @keyframes slideInUp {
+        from {
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .animate-slide-in {
+        animation: slideInUp 0.6s ease-out;
+    }
+    
+    /* Storage Progress Bar */
+    .storage-progress-wrapper {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .storage-progress-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+    }
+    
+    .storage-progress-bar {
+        height: 12px;
+        background: #f1f5f9;
+        border-radius: 1rem;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .storage-progress-fill {
+        height: 100%;
+        background: var(--accent-gradient);
+        border-radius: 1rem;
+        transition: width 0.6s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .storage-progress-fill::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        right: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        animation: shimmer 2s infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+    }
+    
+    .storage-details {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 0.75rem;
+        font-size: 0.875rem;
+        color: #64748b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Dashboard Header -->
+    <div class="dashboard-header animate-slide-in">
+        <h1 class="welcome-text">Welcome back, {{ current_user.username }}! 👋</h1>
+        <p class="welcome-subtitle">
+            Your files are encrypted with AES-256-GCM · {{ total_files }} files stored securely
+        </p>
+    </div>
+    
+    <!-- Statistics Cards -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stat-card-enhanced animate-slide-in" style="animation-delay: 0.1s;">
+                <div class="stat-icon-wrapper primary">
+                    <i class="fas fa-file"></i>
+                </div>
+                <div class="stat-number">{{ total_files }}</div>
+                <div class="stat-label">Total Files</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-enhanced animate-slide-in" style="animation-delay: 0.2s;">
+                <div class="stat-icon-wrapper success">
+                    <i class="fas fa-shield-halved"></i>
+                </div>
+                <div class="stat-number">{{ shared_count }}</div>
+                <div class="stat-label">Shared Files</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-enhanced animate-slide-in" style="animation-delay: 0.3s;">
+                <div class="stat-icon-wrapper warning">
+                    <i class="fas fa-database"></i>
+                </div>
+                <div class="stat-number">{{ "%.1f"|format(storage_used / (1024**3)) }} GB</div>
+                <div class="stat-label">Storage Used</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card-enhanced animate-slide-in" style="animation-delay: 0.4s;">
+                <div class="stat-icon-wrapper info">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Encrypted</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Storage Progress -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="storage-progress-wrapper animate-slide-in" style="animation-delay: 0.5s;">
+                <div class="storage-progress-header">
+                    <span style="font-weight: 600; color: #1e293b;">
+                        <i class="fas fa-hard-drive me-2"></i>Storage Usage
+                    </span>
+                    <span style="font-weight: 600; color: #667eea;">
+                        {{ storage_percent }}%
+                    </span>
+                </div>
+                <div class="storage-progress-bar">
+                    <div class="storage-progress-fill" style="width: {{ storage_percent }}%"></div>
+                </div>
+                <div class="storage-details">
+                    <span>{{ "%.2f"|format(storage_used / (1024**3)) }} GB used</span>
+                    <span>{{ "%.2f"|format(storage_quota / (1024**3)) }} GB total</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Quick Actions -->
+    <div class="row g-4 mb-4">
+        <div class="col-12">
+            <h4 class="mb-3" style="font-weight: 700; color: #1e293b;">
+                <i class="fas fa-bolt me-2" style="color: #667eea;"></i>Quick Actions
+            </h4>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('files.upload') }}" class="quick-action-card animate-slide-in" style="animation-delay: 0.6s;">
+                <div class="quick-action-icon">
+                    <i class="fas fa-cloud-upload-alt"></i>
+                </div>
+                <h5 class="quick-action-title">Upload Files</h5>
+                <p class="quick-action-desc">Securely upload and encrypt your files</p>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('search_enhanced.search_page') }}" class="quick-action-card animate-slide-in" style="animation-delay: 0.7s;">
+                <div class="quick-action-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h5 class="quick-action-title">Search Files</h5>
+                <p class="quick-action-desc">Find files with encrypted search</p>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('security.security_dashboard') }}" class="quick-action-card animate-slide-in" style="animation-delay: 0.8s;">
+                <div class="quick-action-icon">
+                    <i class="fas fa-shield-alt"></i>
+                </div>
+                <h5 class="quick-action-title">Security</h5>
+                <p class="quick-action-desc">Manage encryption and security</p>
+            </a>
+        </div>
+        <div class="col-md-3">
+            <a href="{{ url_for('main.my_files') }}" class="quick-action-card animate-slide-in" style="animation-delay: 0.9s;">
+                <div class="quick-action-icon">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <h5 class="quick-action-title">Browse Files</h5>
+                <p class="quick-action-desc">View and organize your files</p>
+            </a>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Recent Files -->
+        <div class="col-lg-8">
+            <div class="card animate-slide-in" style="animation-delay: 1s;">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-clock me-2"></i>Recent Files
+                    </h5>
+                    <a href="{{ url_for('main.my_files') }}" class="btn btn-sm btn-outline-primary">
+                        View All <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+                <div class="card-body">
+                    <!-- Search Bar -->
+                    <div class="search-bar-enhanced">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="fileSearch" placeholder="Search in recent files..." autocomplete="off">
+                        <button class="search-clear" id="clearSearch">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    
+                    {% if recent_files %}
+                    <div class="file-grid" id="fileGrid">
+                        {% for file in recent_files %}
+                        <div class="file-card-enhanced" data-filename="{{ file.original_filename|lower }}" data-type="{{ file.file_type|lower }}">
+                            <span class="file-type-badge" style="background: {% if file.file_type == 'pdf' %}#fee2e2; color: #dc2626{% elif file.file_type in ['doc', 'docx'] %}#dbeafe; color: #2563eb{% elif file.file_type in ['jpg', 'png', 'jpeg'] %}#d1fae5; color: #059669{% else %}#fef3c7; color: #d97706{% endif %};">
+                                {{ file.file_type|upper }}
+                            </span>
+                            <div class="file-icon-large {% if file.file_type == 'pdf' %}pdf{% elif file.file_type in ['doc', 'docx'] %}doc{% elif file.file_type in ['jpg', 'png', 'jpeg'] %}img{% else %}default{% endif %}">
+                                <i class="fas fa-{% if file.file_type == 'pdf' %}file-pdf{% elif file.file_type in ['doc', 'docx'] %}file-word{% elif file.file_type in ['jpg', 'png', 'jpeg'] %}file-image{% elif file.file_type in ['zip', 'rar'] %}file-archive{% else %}file{% endif %}"></i>
+                            </div>
+                            <div class="file-name" title="{{ file.original_filename }}">{{ file.original_filename }}</div>
+                            <div class="file-meta">
+                                <span><i class="fas fa-calendar me-1"></i>{{ file.created_at.strftime('%b %d') }}</span>
+                                <span><i class="fas fa-hdd me-1"></i>{{ "%.2f"|format(file.file_size / 1024) }} KB</span>
+                            </div>
+                            <div class="file-actions">
+                                <button class="file-action-btn" onclick="downloadFile('{{ file.uuid }}')">
+                                    <i class="fas fa-download"></i>
+                                </button>
+                                <button class="file-action-btn" onclick="shareFile('{{ file.uuid }}')">
+                                    <i class="fas fa-share-alt"></i>
+                                </button>
+                                <button class="file-action-btn" onclick="viewFileDetails('{{ file.uuid }}')">
+                                    <i class="fas fa-info-circle"></i>
+                                </button>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    <div id="noResults" class="empty-state" style="display: none;">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <h3 class="empty-state-title">No files found</h3>
+                        <p class="empty-state-desc">Try adjusting your search terms</p>
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-inbox"></i>
+                        </div>
+                        <h3 class="empty-state-title">No files yet</h3>
+                        <p class="empty-state-desc">Upload your first file to get started</p>
+                        <a href="{{ url_for('files.upload') }}" class="btn btn-primary">
+                            <i class="fas fa-cloud-upload-alt me-2"></i>Upload Files
+                        </a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recent Activity -->
+        <div class="col-lg-4">
+            <div class="card animate-slide-in" style="animation-delay: 1.1s;">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-history me-2"></i>Recent Activity
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if recent_activity %}
+                    <div class="activity-timeline">
+                        {% for activity in recent_activity %}
+                        <div class="activity-item">
+                            <div class="activity-content">
+                                <div class="activity-title">{{ activity.action }}</div>
+                                {% if activity.resource_name %}
+                                <div style="font-size: 0.875rem; color: #64748b; margin-bottom: 0.25rem;">
+                                    {{ activity.resource_name }}
+                                </div>
+                                {% endif %}
+                                <div class="activity-time">
+                                    <i class="fas fa-clock me-1"></i>
+                                    {{ activity.created_at.strftime('%b %d, %I:%M %p') }}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="empty-state">
+                        <div class="empty-state-icon">
+                            <i class="fas fa-history"></i>
+                        </div>
+                        <p class="empty-state-desc">No recent activity</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Real-time file search
+const fileSearch = document.getElementById('fileSearch');
+const clearSearch = document.getElementById('clearSearch');
+const fileCards = document.querySelectorAll('.file-card-enhanced');
+const noResults = document.getElementById('noResults');
+const fileGrid = document.getElementById('fileGrid');
+
+if (fileSearch) {
+    fileSearch.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        
+        // Show/hide clear button
+        if (searchTerm) {
+            clearSearch.classList.add('show');
+        } else {
+            clearSearch.classList.remove('show');
+        }
+        
+        let visibleCount = 0;
+        
+        fileCards.forEach(card => {
+            const filename = card.getAttribute('data-filename');
+            const filetype = card.getAttribute('data-type');
+            
+            if (filename.includes(searchTerm) || filetype.includes(searchTerm)) {
+                card.style.display = 'block';
+                visibleCount++;
+            } else {
+                card.style.display = 'none';
+            }
+        });
+        
+        // Show/hide no results message
+        if (visibleCount === 0 && searchTerm) {
+            fileGrid.style.display = 'none';
+            noResults.style.display = 'block';
+        } else {
+            fileGrid.style.display = 'grid';
+            noResults.style.display = 'none';
+        }
+    });
+    
+    clearSearch.addEventListener('click', function() {
+        fileSearch.value = '';
+        fileSearch.dispatchEvent(new Event('input'));
+        fileSearch.focus();
+    });
+}
+
+// File action functions
+function downloadFile(uuid) {
+    window.location.href = `/files/download/${uuid}`;
+}
+
+function shareFile(uuid) {
+    window.location.href = `/files/share/${uuid}`;
+}
+
+function viewFileDetails(uuid) {
+    // Implement file details modal or redirect
+    console.log('View details for file:', uuid);
+}
+
+// Storage warning
+const storagePercent = {{ storage_percent }};
+if (storagePercent > 80) {
+    console.warn('Storage is running low!');
+    // Could add a notification here
+}
+</script>
+{% endblock %}

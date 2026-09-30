@@ -1,0 +1,623 @@
+{% extends "base.html" %}
+
+{% block title %}Search Files - Secure Cloud Storage{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-container {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 20px;
+        padding: 3rem;
+        color: white;
+        margin-bottom: 2rem;
+    }
+    .search-input-wrapper {
+        position: relative;
+    }
+    .search-input {
+        height: 60px;
+        font-size: 1.1rem;
+        border-radius: 30px;
+        padding-left: 60px;
+        padding-right: 60px;
+        border: none;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+    }
+    .search-icon {
+        position: absolute;
+        left: 25px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #6c757d;
+        font-size: 1.2rem;
+    }
+    .search-btn {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        border-radius: 25px;
+        padding: 10px 25px;
+    }
+    .quick-results {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+        margin-top: 10px;
+        max-height: 400px;
+        overflow-y: auto;
+        z-index: 1000;
+        display: none;
+    }
+    .quick-results.show {
+        display: block;
+    }
+    .quick-result-item {
+        padding: 15px 20px;
+        border-bottom: 1px solid #f0f0f0;
+        cursor: pointer;
+        transition: background 0.2s;
+        color: #333;
+    }
+    .quick-result-item:hover {
+        background: #f8f9fa;
+    }
+    .quick-result-item:last-child {
+        border-bottom: none;
+    }
+    .filter-badge {
+        background: rgba(255,255,255,0.2);
+        border: 1px solid rgba(255,255,255,0.3);
+        color: white;
+        padding: 5px 15px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .filter-badge:hover, .filter-badge.active {
+        background: rgba(255,255,255,0.3);
+        border-color: white;
+    }
+    .stats-card {
+        background: white;
+        border-radius: 15px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+        transition: transform 0.2s;
+    }
+    .stats-card:hover {
+        transform: translateY(-5px);
+    }
+    .stats-icon {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem;
+    }
+    .recent-search-item {
+        padding: 10px 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    .recent-search-item:hover {
+        background: #e9ecef;
+    }
+    .search-tips code {
+        background: rgba(102, 126, 234, 0.1);
+        padding: 3px 8px;
+        border-radius: 5px;
+        color: #667eea;
+    }
+    .typing-indicator {
+        display: none;
+        padding: 10px 20px;
+        color: #6c757d;
+    }
+    .typing-indicator.show {
+        display: block;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Main Search Section -->
+    <div class="search-container">
+        <div class="text-center mb-4">
+            <h1 class="fw-bold mb-2">
+                <i class="fas fa-search me-2"></i>Secure File Search
+            </h1>
+            <p class="opacity-75 mb-0">Search your encrypted files securely using advanced searchable encryption</p>
+        </div>
+        
+        <form id="searchForm" method="POST" action="{{ url_for('search_enhanced.full_search') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="search-input-wrapper">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" 
+                       name="query" 
+                       id="searchInput" 
+                       class="form-control search-input" 
+                       placeholder="Search files by name, content, or use filters..."
+                       autocomplete="off"
+                       value="{{ query or '' }}">
+                <button type="submit" class="btn btn-primary search-btn">
+                    <i class="fas fa-search me-1"></i> Search
+                </button>
+                
+                <!-- Quick Results Dropdown -->
+                <div id="quickResults" class="quick-results">
+                    <div class="typing-indicator" id="typingIndicator">
+                        <i class="fas fa-spinner fa-spin me-2"></i>Searching...
+                    </div>
+                    <div id="quickResultsList"></div>
+                </div>
+            </div>
+            
+            <!-- Search Filters -->
+            <div class="mt-3 d-flex flex-wrap gap-2 justify-content-center">
+                <span class="filter-badge" onclick="addFilter('filetype:pdf')">
+                    <i class="fas fa-file-pdf me-1"></i>PDF
+                </span>
+                <span class="filter-badge" onclick="addFilter('filetype:doc')">
+                    <i class="fas fa-file-word me-1"></i>Documents
+                </span>
+                <span class="filter-badge" onclick="addFilter('filetype:txt')">
+                    <i class="fas fa-file-alt me-1"></i>Text
+                </span>
+                <span class="filter-badge" onclick="addFilter('date:week')">
+                    <i class="fas fa-calendar me-1"></i>This Week
+                </span>
+                <span class="filter-badge" onclick="addFilter('date:month')">
+                    <i class="fas fa-calendar-alt me-1"></i>This Month
+                </span>
+            </div>
+        </form>
+    </div>
+    
+    <!-- Stats and Info Row -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-primary bg-opacity-10">
+                    <i class="fas fa-folder-open fa-lg text-primary"></i>
+                </div>
+                <h3 class="fw-bold mb-1" id="totalFiles">{{ total_files }}</h3>
+                <small class="text-muted">Total Files</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-success bg-opacity-10">
+                    <i class="fas fa-database fa-lg text-success"></i>
+                </div>
+                <h3 class="fw-bold mb-1" id="indexedFiles">{{ total_indexed }}</h3>
+                <small class="text-muted">Indexed Files</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon {% if search_enabled %}bg-success{% else %}bg-warning{% endif %} bg-opacity-10">
+                    <i class="fas fa-{% if search_enabled %}check-circle{% else %}exclamation-circle{% endif %} fa-lg {% if search_enabled %}text-success{% else %}text-warning{% endif %}"></i>
+                </div>
+                <h3 class="fw-bold mb-1">{% if search_enabled %}Active{% else %}Disabled{% endif %}</h3>
+                <small class="text-muted">Search Status</small>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stats-card">
+                <div class="stats-icon bg-info bg-opacity-10">
+                    <i class="fas fa-shield-alt fa-lg text-info"></i>
+                </div>
+                <h3 class="fw-bold mb-1">SSE</h3>
+                <small class="text-muted">Encryption Type</small>
+            </div>
+        </div>
+    </div>
+    
+    <div class="row g-4">
+        <!-- Recent Searches -->
+        <div class="col-lg-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">
+                        <i class="fas fa-history me-2 text-muted"></i>Recent Searches
+                    </h6>
+                    {% if recent_searches %}
+                    <button class="btn btn-sm btn-link text-danger p-0" onclick="clearHistory()">
+                        Clear
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if recent_searches %}
+                        {% for search in recent_searches %}
+                        <div class="recent-search-item" onclick="setSearch('{{ search.query }}')">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span>
+                                    <i class="fas fa-search text-muted me-2"></i>
+                                    {{ search.query }}
+                                </span>
+                                <span class="badge bg-light text-dark">{{ search.results }} results</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="fas fa-search fa-2x mb-2 opacity-50"></i>
+                            <p class="mb-0">No recent searches</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Search Tips -->
+        <div class="col-lg-8">
+            <div class="card shadow-sm h-100">
+                <div class="card-header bg-white">
+                    <h6 class="mb-0">
+                        <i class="fas fa-lightbulb me-2 text-warning"></i>Search Tips & Operators
+                    </h6>
+                </div>
+                <div class="card-body search-tips">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-primary mb-2">Basic Search</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <code>report</code> - Search for keyword
+                                </li>
+                                <li class="mb-2">
+                                    <code>"annual report"</code> - Exact phrase
+                                </li>
+                                <li class="mb-2">
+                                    <code>-draft</code> - Exclude keyword
+                                </li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="fw-bold text-primary mb-2">Filter Operators</h6>
+                            <ul class="list-unstyled mb-0">
+                                <li class="mb-2">
+                                    <code>filetype:pdf</code> - Filter by type
+                                </li>
+                                <li class="mb-2">
+                                    <code>date:week</code> - Recent files
+                                </li>
+                                <li class="mb-2">
+                                    <code>size:>1mb</code> - Size filter
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="alert alert-info border-0 mb-0">
+                        <div class="d-flex">
+                            <i class="fas fa-info-circle me-3 mt-1"></i>
+                            <div>
+                                <strong>How It Works:</strong> Quick search (as you type) searches filenames only and doesn't require a password. 
+                                Full search requires your account password to generate encrypted search tokens for searching file contents securely.
+                                <strong class="d-block mt-1">Password = Encryption Key</strong> - Your password derives the search encryption key. 
+                                Use the same password you used when indexing files.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    {% if not search_enabled %}
+    <!-- Enable Search Section -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-body text-center py-5">
+            <div class="mb-3">
+                <i class="fas fa-key fa-3x text-warning"></i>
+            </div>
+            <h5>Enable Full-Text Encrypted Search</h5>
+            <p class="text-muted mb-4">
+                To search file contents (not just filenames), you need to enable search indexing.
+                This creates a secure search key derived from your password.
+            </p>
+            <button class="btn btn-primary btn-lg" data-bs-toggle="modal" data-bs-target="#enableSearchModal">
+                <i class="fas fa-unlock me-2"></i>Enable Search Indexing
+            </button>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Enable Search Modal -->
+<div class="modal fade" id="enableSearchModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enable Search Indexing</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="enableSearchForm">
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Your password will be used to derive a secure search encryption key.
+                        This allows searching encrypted file contents without exposing your data.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Account Password</label>
+                        <input type="password" name="password" class="form-control" required
+                               placeholder="Enter your account password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-key me-2"></i>Enable Search
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Password Modal for Full Search -->
+<div class="modal fade" id="passwordModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enter Password for Full Search</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="passwordForm">
+                <div class="modal-body">
+                    <input type="hidden" name="query" id="modalQuery">
+                    <div class="alert alert-info">
+                        <i class="fas fa-lock me-2"></i>
+                        To search encrypted file contents, enter your account password.
+                        This generates secure search tokens on-the-fly.
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Account Password</label>
+                        <input type="password" name="password" id="modalPassword" class="form-control" required
+                               placeholder="Enter your account password">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search me-2"></i>Search Contents
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+const quickResults = document.getElementById('quickResults');
+const quickResultsList = document.getElementById('quickResultsList');
+const typingIndicator = document.getElementById('typingIndicator');
+
+// Live search as user types
+searchInput.addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    const query = this.value.trim();
+    
+    if (query.length < 2) {
+        quickResults.classList.remove('show');
+        return;
+    }
+    
+    // Show typing indicator
+    quickResults.classList.add('show');
+    typingIndicator.classList.add('show');
+    quickResultsList.innerHTML = '';
+    
+    // Debounce search
+    searchTimeout = setTimeout(() => {
+        performQuickSearch(query);
+    }, 300);
+});
+
+// Hide results when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.search-input-wrapper')) {
+        quickResults.classList.remove('show');
+    }
+});
+
+// Quick search API call
+function performQuickSearch(query) {
+    fetch(`{{ url_for('search_enhanced.quick_search') }}?q=${encodeURIComponent(query)}`)
+        .then(response => response.json())
+        .then(data => {
+            typingIndicator.classList.remove('show');
+            
+            if (data.results.length === 0) {
+                quickResultsList.innerHTML = `
+                    <div class="text-center text-muted py-3">
+                        <i class="fas fa-search mb-2"></i>
+                        <p class="mb-0">No files found matching "${query}"</p>
+                        <small>Try full search for encrypted content</small>
+                    </div>
+                `;
+            } else {
+                quickResultsList.innerHTML = data.results.map(file => `
+                    <div class="quick-result-item" onclick="window.location.href='{{ url_for('files.download', file_uuid='') }}${file.uuid}'">
+                        <div class="d-flex align-items-center">
+                            <i class="fas ${getFileIcon(file.extension)} fa-lg me-3 text-${getFileColor(file.extension)}"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold">${file.filename}</div>
+                                <small class="text-muted">${file.size} • ${file.date}</small>
+                            </div>
+                            <span class="badge bg-light text-dark">${file.match_type}</span>
+                        </div>
+                    </div>
+                `).join('');
+                
+                // Add "Search all content" option
+                quickResultsList.innerHTML += `
+                    <div class="quick-result-item bg-light" onclick="submitFullSearch()">
+                        <div class="d-flex align-items-center justify-content-center text-primary">
+                            <i class="fas fa-search-plus me-2"></i>
+                            <span>Search encrypted content for "${query}"</span>
+                        </div>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            typingIndicator.classList.remove('show');
+            quickResultsList.innerHTML = `
+                <div class="text-center text-danger py-3">
+                    <i class="fas fa-exclamation-circle mb-2"></i>
+                    <p class="mb-0">Search error</p>
+                </div>
+            `;
+        });
+}
+
+function getFileIcon(ext) {
+    const icons = {
+        'pdf': 'fa-file-pdf',
+        'doc': 'fa-file-word', 'docx': 'fa-file-word',
+        'xls': 'fa-file-excel', 'xlsx': 'fa-file-excel',
+        'jpg': 'fa-file-image', 'jpeg': 'fa-file-image', 'png': 'fa-file-image', 'gif': 'fa-file-image',
+        'txt': 'fa-file-alt', 'md': 'fa-file-alt',
+        'py': 'fa-file-code', 'js': 'fa-file-code', 'java': 'fa-file-code',
+        'zip': 'fa-file-archive', 'rar': 'fa-file-archive'
+    };
+    return icons[ext] || 'fa-file';
+}
+
+function getFileColor(ext) {
+    const colors = {
+        'pdf': 'danger',
+        'doc': 'primary', 'docx': 'primary',
+        'xls': 'success', 'xlsx': 'success',
+        'jpg': 'info', 'jpeg': 'info', 'png': 'info', 'gif': 'info',
+        'txt': 'secondary', 'md': 'secondary',
+        'py': 'warning', 'js': 'warning', 'java': 'warning'
+    };
+    return colors[ext] || 'muted';
+}
+
+function addFilter(filter) {
+    const current = searchInput.value;
+    if (!current.includes(filter)) {
+        searchInput.value = (current + ' ' + filter).trim();
+        searchInput.focus();
+    }
+}
+
+function setSearch(query) {
+    searchInput.value = query;
+    document.getElementById('searchForm').submit();
+}
+
+function submitFullSearch() {
+    const query = searchInput.value.trim();
+    if (query) {
+        {% if search_enabled %}
+        // Show password modal
+        document.getElementById('modalQuery').value = query;
+        new bootstrap.Modal(document.getElementById('passwordModal')).show();
+        {% else %}
+        // Submit form directly (will show filename results only)
+        document.getElementById('searchForm').submit();
+        {% endif %}
+    }
+}
+
+function clearHistory() {
+    fetch('{{ url_for("search_enhanced.clear_search_history") }}', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    }).then(() => location.reload());
+}
+
+// Handle enable search form
+document.getElementById('enableSearchForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('{{ url_for("search_enhanced.enable_search") }}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token() }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error || 'Failed to enable search');
+        }
+    });
+});
+
+// Handle password form for full search
+document.getElementById('passwordForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const query = document.getElementById('modalQuery').value;
+    const password = document.getElementById('modalPassword').value;
+    
+    // Submit the main search form with password
+    const form = document.getElementById('searchForm');
+    const passwordInput = document.createElement('input');
+    passwordInput.type = 'hidden';
+    passwordInput.name = 'password';
+    passwordInput.value = password;
+    form.appendChild(passwordInput);
+    
+    searchInput.value = query;
+    form.submit();
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', function(e) {
+    // Ctrl/Cmd + K to focus search
+    if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        searchInput.focus();
+    }
+    // Escape to close results
+    if (e.key === 'Escape') {
+        quickResults.classList.remove('show');
+    }
+});
+
+// Load stats on page load
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('{{ url_for("search_enhanced.search_stats") }}')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalFiles').textContent = data.total_files;
+            document.getElementById('indexedFiles').textContent = data.indexed_files;
+        });
+});
+</script>
+{% endblock %}

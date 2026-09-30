@@ -1,0 +1,944 @@
+{% extends "base.html" %}
+
+{% block title %}My Files{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* File Browser Styles */
+    .files-header {
+        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        color: white;
+        border-radius: 1.5rem;
+        padding: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .files-title {
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 0.5rem;
+    }
+    
+    .files-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.95rem;
+        opacity: 0.95;
+        flex-wrap: wrap;
+    }
+    
+    .breadcrumb-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .breadcrumb-link {
+        color: white;
+        text-decoration: none;
+        transition: all 0.2s;
+        padding: 0.25rem 0.5rem;
+        border-radius: 0.25rem;
+    }
+    
+    .breadcrumb-link:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Toolbar */
+    .file-toolbar {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .toolbar-row {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+    
+    .search-box {
+        flex: 1;
+        min-width: 300px;
+        position: relative;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 0.75rem 2.5rem 0.75rem 3rem;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        font-size: 1rem;
+        transition: all 0.2s;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+    }
+    
+    .search-icon {
+        position: absolute;
+        left: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #64748b;
+        font-size: 1.125rem;
+    }
+    
+    .clear-search {
+        position: absolute;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0.25rem;
+        display: none;
+    }
+    
+    .clear-search.show {
+        display: block;
+    }
+    
+    .filter-dropdown {
+        position: relative;
+    }
+    
+    .filter-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.2s;
+    }
+    
+    .filter-btn:hover,
+    .filter-btn.active {
+        border-color: #4f46e5;
+        color: #4f46e5;
+        background: rgba(79, 70, 229, 0.05);
+    }
+    
+    .filter-badge {
+        background: #4f46e5;
+        color: white;
+        border-radius: 0.5rem;
+        padding: 0.125rem 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    
+    .view-toggle {
+        display: flex;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        overflow: hidden;
+    }
+    
+    .view-btn {
+        padding: 0.75rem 1rem;
+        background: white;
+        border: none;
+        cursor: pointer;
+        color: #64748b;
+        transition: all 0.2s;
+        font-size: 1.125rem;
+    }
+    
+    .view-btn.active {
+        background: #4f46e5;
+        color: white;
+    }
+    
+    .view-btn:not(.active):hover {
+        background: #f8fafc;
+    }
+    
+    .sort-dropdown {
+        position: relative;
+    }
+    
+    .sort-btn {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 0.75rem;
+        cursor: pointer;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.2s;
+    }
+    
+    .sort-btn:hover {
+        border-color: #4f46e5;
+        color: #4f46e5;
+    }
+    
+    /* Filter Panel */
+    .filter-panel {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        display: none;
+    }
+    
+    .filter-panel.show {
+        display: block;
+    }
+    
+    .filter-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-group:last-child {
+        margin-bottom: 0;
+    }
+    
+    .filter-label {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.75rem;
+        display: block;
+    }
+    
+    .filter-chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .filter-chip {
+        padding: 0.5rem 1rem;
+        background: #f8fafc;
+        border: 2px solid #e2e8f0;
+        border-radius: 2rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #64748b;
+        transition: all 0.2s;
+    }
+    
+    .filter-chip:hover {
+        border-color: #cbd5e1;
+        background: white;
+    }
+    
+    .filter-chip.active {
+        background: #4f46e5;
+        border-color: #4f46e5;
+        color: white;
+    }
+    
+    /* Stats Bar */
+    .stats-bar {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        padding: 1rem;
+        background: #f8fafc;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .stat-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #64748b;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+    
+    .stat-item i {
+        color: #4f46e5;
+    }
+    
+    .stat-value {
+        color: #1e293b;
+        font-weight: 700;
+    }
+    
+    /* File Grid View */
+    .file-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .file-card-grid {
+        background: white;
+        border-radius: 1rem;
+        padding: 1.5rem;
+        border: 2px solid #e2e8f0;
+        transition: all 0.3s;
+        cursor: pointer;
+        position: relative;
+    }
+    
+    .file-card-grid:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 12px 24px -10px rgba(0, 0, 0, 0.15);
+        border-color: #4f46e5;
+    }
+    
+    .file-select-checkbox {
+        position: absolute;
+        top: 1rem;
+        left: 1rem;
+        width: 20px;
+        height: 20px;
+        cursor: pointer;
+    }
+    
+    .file-type-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        padding: 0.25rem 0.75rem;
+        border-radius: 0.5rem;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .file-icon-grid {
+        width: 80px;
+        height: 80px;
+        margin: 1rem auto 1rem;
+        border-radius: 1rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+    }
+    
+    .file-name-grid {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        text-align: center;
+    }
+    
+    .file-meta-grid {
+        display: flex;
+        justify-content: center;
+        gap: 1rem;
+        font-size: 0.875rem;
+        color: #64748b;
+        margin-top: 0.75rem;
+    }
+    
+    .file-actions-grid {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        padding-top: 1rem;
+        border-top: 1px solid #f1f5f9;
+    }
+    
+    .file-action-btn-grid {
+        flex: 1;
+        padding: 0.5rem;
+        border: 1px solid #e2e8f0;
+        background: white;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #64748b;
+    }
+    
+    .file-action-btn-grid:hover {
+        background: #f8fafc;
+        color: #4f46e5;
+        border-color: #4f46e5;
+    }
+    
+    /* File List View */
+    .file-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+    
+    .file-card-list {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.25rem 1.5rem;
+        border: 1px solid #e2e8f0;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        transition: all 0.2s;
+        cursor: pointer;
+    }
+    
+    .file-card-list:hover {
+        background: #f8fafc;
+        border-color: #4f46e5;
+    }
+    
+    .file-select-list {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    
+    .file-icon-list {
+        width: 48px;
+        height: 48px;
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .file-info-list {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .file-name-list {
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.25rem;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    
+    .file-meta-list {
+        font-size: 0.875rem;
+        color: #64748b;
+        display: flex;
+        gap: 1rem;
+    }
+    
+    .file-actions-list {
+        display: flex;
+        gap: 0.5rem;
+    }
+    
+    .file-action-btn-list {
+        padding: 0.5rem 0.75rem;
+        border: 1px solid #e2e8f0;
+        background: white;
+        border-radius: 0.5rem;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #64748b;
+    }
+    
+    .file-action-btn-list:hover {
+        background: #f8fafc;
+        color: #4f46e5;
+        border-color: #4f46e5;
+    }
+    
+    /* Empty State */
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+    
+    .empty-state-icon {
+        font-size: 4rem;
+        color: #cbd5e1;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-state-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #1e293b;
+        margin-bottom: 0.5rem;
+    }
+    
+    .empty-state-desc {
+        color: #64748b;
+        margin-bottom: 2rem;
+    }
+    
+    /* File Icons */
+    .file-icon.pdf { background: #fee2e2; color: #dc2626; }
+    .file-icon.doc { background: #dbeafe; color: #2563eb; }
+    .file-icon.img { background: #d1fae5; color: #059669; }
+    .file-icon.zip { background: #fef3c7; color: #d97706; }
+    .file-icon.txt { background: #f1f5f9; color: #64748b; }
+    .file-icon.xls { background: #dcfce7; color: #16a34a; }
+    .file-icon.default { background: #f1f5f9; color: #64748b; }
+    
+    /* Animations */
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+        animation: fadeIn 0.3s ease-out;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- Files Header -->
+    <div class="files-header">
+        <h1 class="files-title">
+            <i class="fas fa-folder-open me-2"></i>
+            {% if current_folder %}{{ current_folder.name }}{% else %}My Files{% endif %}
+        </h1>
+        <div class="files-breadcrumb">
+            <div class="breadcrumb-item">
+                <i class="fas fa-home"></i>
+                <a href="{{ url_for('main.my_files') }}" class="breadcrumb-link">Home</a>
+            </div>
+            {% for folder in breadcrumb %}
+            <div class="breadcrumb-item">
+                <i class="fas fa-chevron-right"></i>
+                <a href="{{ url_for('main.my_files', folder_uuid=folder.uuid) }}" class="breadcrumb-link">
+                    {{ folder.name }}
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    
+    <!-- Toolbar -->
+    <div class="file-toolbar">
+        <div class="toolbar-row">
+            <!-- Search -->
+            <div class="search-box">
+                <i class="fas fa-search search-icon"></i>
+                <input type="text" class="search-input" id="fileSearchInput" placeholder="Search files and folders..." autocomplete="off">
+                <button class="clear-search" id="clearSearchBtn">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Filter -->
+            <div class="filter-dropdown">
+                <button class="filter-btn" id="filterToggle">
+                    <i class="fas fa-filter"></i>
+                    <span>Filters</span>
+                    <span class="filter-badge" id="filterCount" style="display: none;">0</span>
+                </button>
+            </div>
+            
+            <!-- View Toggle -->
+            <div class="view-toggle">
+                <button class="view-btn active" id="gridViewBtn" title="Grid View">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button class="view-btn" id="listViewBtn" title="List View">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+            
+            <!-- Sort -->
+            <div class="sort-dropdown">
+                <button class="sort-btn" id="sortBtn">
+                    <i class="fas fa-sort-alpha-down"></i>
+                    <span>Sort: Name</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Filter Panel -->
+    <div class="filter-panel" id="filterPanel">
+        <div class="filter-group">
+            <label class="filter-label">File Type</label>
+            <div class="filter-chips">
+                <button class="filter-chip" data-type="pdf">
+                    <i class="fas fa-file-pdf me-1"></i> PDF
+                </button>
+                <button class="filter-chip" data-type="doc">
+                    <i class="fas fa-file-word me-1"></i> Document
+                </button>
+                <button class="filter-chip" data-type="img">
+                    <i class="fas fa-file-image me-1"></i> Image
+                </button>
+                <button class="filter-chip" data-type="zip">
+                    <i class="fas fa-file-archive me-1"></i> Archive
+                </button>
+                <button class="filter-chip" data-type="txt">
+                    <i class="fas fa-file-alt me-1"></i> Text
+                </button>
+                <button class="filter-chip" data-type="xls">
+                    <i class="fas fa-file-excel me-1"></i> Spreadsheet
+                </button>
+            </div>
+        </div>
+        
+        <div class="filter-group">
+            <label class="filter-label">Date</label>
+            <div class="filter-chips">
+                <button class="filter-chip" data-date="today">Today</button>
+                <button class="filter-chip" data-date="week">This Week</button>
+                <button class="filter-chip" data-date="month">This Month</button>
+                <button class="filter-chip" data-date="year">This Year</button>
+            </div>
+        </div>
+        
+        <div class="filter-group">
+            <label class="filter-label">Size</label>
+            <div class="filter-chips">
+                <button class="filter-chip" data-size="small">&lt; 1 MB</button>
+                <button class="filter-chip" data-size="medium">1-10 MB</button>
+                <button class="filter-chip" data-size="large">&gt; 10 MB</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+        <div class="stat-item">
+            <i class="fas fa-file"></i>
+            <span><span class="stat-value" id="fileCount">{{ files|length }}</span> files</span>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-folder"></i>
+            <span><span class="stat-value">{{ subfolders|length }}</span> folders</span>
+        </div>
+        <div class="stat-item">
+            <i class="fas fa-hdd"></i>
+            <span><span class="stat-value">{{ "%.2f"|format(files|sum(attribute='file_size') / (1024**2)) }}</span> MB</span>
+        </div>
+        <div class="stat-item" id="selectedCount" style="display: none;">
+            <i class="fas fa-check-square"></i>
+            <span><span class="stat-value" id="selectedCountValue">0</span> selected</span>
+        </div>
+    </div>
+    
+    <!-- Files Container -->
+    <div id="filesContainer">
+        {% if files or subfolders %}
+        <!-- Grid View -->
+        <div class="file-grid" id="gridView">
+            {% for folder in subfolders %}
+            <div class="file-card-grid" data-name="{{ folder.name|lower }}" data-type="folder">
+                <div class="file-type-badge" style="background: #dbeafe; color: #2563eb;">FOLDER</div>
+                <div class="file-icon-grid" style="background: #dbeafe; color: #2563eb;">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="file-name-grid" title="{{ folder.name }}">{{ folder.name }}</div>
+                <div class="file-meta-grid">
+                    <span><i class="fas fa-calendar me-1"></i>{{ folder.created_at.strftime('%b %d') }}</span>
+                </div>
+                <div class="file-actions-grid">
+                    <button class="file-action-btn-grid" onclick="window.location.href='{{ url_for('main.my_files', folder_uuid=folder.uuid) }}'">
+                        <i class="fas fa-folder-open"></i>
+                    </button>
+                    <button class="file-action-btn-grid">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% for file in files %}
+            <div class="file-card-grid" data-name="{{ file.original_filename|lower }}" data-type="{{ file.file_type|lower }}" data-size="{{ file.file_size }}" data-date="{{ file.created_at.isoformat() }}">
+                <input type="checkbox" class="file-select-checkbox" data-file-id="{{ file.id }}">
+                <div class="file-type-badge" style="background: {% if file.file_type == 'pdf' %}#fee2e2; color: #dc2626{% elif file.file_type in ['doc', 'docx'] %}#dbeafe; color: #2563eb{% elif file.file_type in ['jpg', 'png', 'jpeg'] %}#d1fae5; color: #059669{% elif file.file_type in ['zip', 'rar'] %}#fef3c7; color: #d97706{% else %}#f1f5f9; color: #64748b{% endif %};">
+                    {{ file.file_type|upper }}
+                </div>
+                <div class="file-icon-grid file-icon {% if file.file_type == 'pdf' %}pdf{% elif file.file_type in ['doc', 'docx'] %}doc{% elif file.file_type in ['jpg', 'png', 'jpeg'] %}img{% elif file.file_type in ['zip', 'rar'] %}zip{% elif file.file_type in ['xls', 'xlsx'] %}xls{% elif file.file_type == 'txt' %}txt{% else %}default{% endif %}">
+                    <i class="fas fa-{% if file.file_type == 'pdf' %}file-pdf{% elif file.file_type in ['doc', 'docx'] %}file-word{% elif file.file_type in ['jpg', 'png', 'jpeg'] %}file-image{% elif file.file_type in ['zip', 'rar'] %}file-archive{% elif file.file_type in ['xls', 'xlsx'] %}file-excel{% elif file.file_type == 'txt' %}file-alt{% else %}file{% endif %}"></i>
+                </div>
+                <div class="file-name-grid" title="{{ file.original_filename }}">{{ file.original_filename }}</div>
+                <div class="file-meta-grid">
+                    <span><i class="fas fa-calendar me-1"></i>{{ file.created_at.strftime('%b %d') }}</span>
+                    <span><i class="fas fa-hdd me-1"></i>{{ "%.1f"|format(file.file_size / 1024) }} KB</span>
+                </div>
+                <div class="file-actions-grid">
+                    <button class="file-action-btn-grid" onclick="downloadFile('{{ file.uuid }}')">
+                        <i class="fas fa-download"></i>
+                    </button>
+                    <button class="file-action-btn-grid" onclick="shareFile('{{ file.uuid }}')">
+                        <i class="fas fa-share-alt"></i>
+                    </button>
+                    <button class="file-action-btn-grid" onclick="deleteFile('{{ file.uuid }}')">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- List View -->
+        <div class="file-list" id="listView" style="display: none;">
+            {% for folder in subfolders %}
+            <div class="file-card-list" data-name="{{ folder.name|lower }}" data-type="folder">
+                <div class="file-icon-list" style="background: #dbeafe; color: #2563eb;">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="file-info-list">
+                    <div class="file-name-list">{{ folder.name }}</div>
+                    <div class="file-meta-list">
+                        <span><i class="fas fa-folder me-1"></i>Folder</span>
+                        <span><i class="fas fa-calendar me-1"></i>{{ folder.created_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                </div>
+                <div class="file-actions-list">
+                    <button class="file-action-btn-list" onclick="window.location.href='{{ url_for('main.my_files', folder_uuid=folder.uuid) }}'">
+                        <i class="fas fa-folder-open me-1"></i> Open
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% for file in files %}
+            <div class="file-card-list" data-name="{{ file.original_filename|lower }}" data-type="{{ file.file_type|lower }}" data-size="{{ file.file_size }}" data-date="{{ file.created_at.isoformat() }}">
+                <input type="checkbox" class="file-select-list" data-file-id="{{ file.id }}">
+                <div class="file-icon-list file-icon {% if file.file_type == 'pdf' %}pdf{% elif file.file_type in ['doc', 'docx'] %}doc{% elif file.file_type in ['jpg', 'png', 'jpeg'] %}img{% elif file.file_type in ['zip', 'rar'] %}zip{% elif file.file_type in ['xls', 'xlsx'] %}xls{% elif file.file_type == 'txt' %}txt{% else %}default{% endif %}">
+                    <i class="fas fa-{% if file.file_type == 'pdf' %}file-pdf{% elif file.file_type in ['doc', 'docx'] %}file-word{% elif file.file_type in ['jpg', 'png', 'jpeg'] %}file-image{% elif file.file_type in ['zip', 'rar'] %}file-archive{% elif file.file_type in ['xls', 'xlsx'] %}file-excel{% elif file.file_type == 'txt' %}file-alt{% else %}file{% endif %}"></i>
+                </div>
+                <div class="file-info-list">
+                    <div class="file-name-list">{{ file.original_filename }}</div>
+                    <div class="file-meta-list">
+                        <span><i class="fas fa-file me-1"></i>{{ file.file_type|upper }}</span>
+                        <span><i class="fas fa-hdd me-1"></i>{{ "%.2f"|format(file.file_size / 1024) }} KB</span>
+                        <span><i class="fas fa-calendar me-1"></i>{{ file.created_at.strftime('%b %d, %Y') }}</span>
+                    </div>
+                </div>
+                <div class="file-actions-list">
+                    <button class="file-action-btn-list" onclick="downloadFile('{{ file.uuid }}')">
+                        <i class="fas fa-download me-1"></i> Download
+                    </button>
+                    <button class="file-action-btn-list" onclick="shareFile('{{ file.uuid }}')">
+                        <i class="fas fa-share-alt me-1"></i> Share
+                    </button>
+                    <button class="file-action-btn-list" onclick="deleteFile('{{ file.uuid }}')">
+                        <i class="fas fa-trash me-1"></i> Delete
+                    </button>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- No Results -->
+        <div class="empty-state" id="noResults" style="display: none;">
+            <div class="empty-state-icon">
+                <i class="fas fa-search"></i>
+            </div>
+            <h3 class="empty-state-title">No files found</h3>
+            <p class="empty-state-desc">Try adjusting your search or filters</p>
+        </div>
+        
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-state-icon">
+                <i class="fas fa-inbox"></i>
+            </div>
+            <h3 class="empty-state-title">No files yet</h3>
+            <p class="empty-state-desc">Upload your first file to get started</p>
+            <a href="{{ url_for('files.upload') }}" class="btn btn-primary">
+                <i class="fas fa-cloud-upload-alt me-2"></i>Upload Files
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// View toggle
+const gridViewBtn = document.getElementById('gridViewBtn');
+const listViewBtn = document.getElementById('listViewBtn');
+const gridView = document.getElementById('gridView');
+const listView = document.getElementById('listView');
+
+gridViewBtn?.addEventListener('click', () => {
+    gridViewBtn.classList.add('active');
+    listViewBtn.classList.remove('active');
+    gridView.style.display = 'grid';
+    listView.style.display = 'none';
+});
+
+listViewBtn?.addEventListener('click', () => {
+    listViewBtn.classList.add('active');
+    gridViewBtn.classList.remove('active');
+    listView.style.display = 'flex';
+    gridView.style.display = 'none';
+});
+
+// Search functionality
+const searchInput = document.getElementById('fileSearchInput');
+const clearSearchBtn = document.getElementById('clearSearchBtn');
+const fileCards = document.querySelectorAll('[data-name]');
+const noResults = document.getElementById('noResults');
+const fileCount = document.getElementById('fileCount');
+
+searchInput?.addEventListener('input', function() {
+    const searchTerm = this.value.toLowerCase().trim();
+    
+    if (searchTerm) {
+        clearSearchBtn.classList.add('show');
+    } else {
+        clearSearchBtn.classList.remove('show');
+    }
+    
+    filterFiles();
+});
+
+clearSearchBtn?.addEventListener('click', () => {
+    searchInput.value = '';
+    clearSearchBtn.classList.remove('show');
+    filterFiles();
+});
+
+// Filter toggle
+const filterToggle = document.getElementById('filterToggle');
+const filterPanel = document.getElementById('filterPanel');
+const filterChips = document.querySelectorAll('.filter-chip');
+
+filterToggle?.addEventListener('click', () => {
+    filterPanel.classList.toggle('show');
+    filterToggle.classList.toggle('active');
+});
+
+// Filter chips
+filterChips.forEach(chip => {
+    chip.addEventListener('click', function() {
+        this.classList.toggle('active');
+        updateFilterCount();
+        filterFiles();
+    });
+});
+
+function updateFilterCount() {
+    const activeFilters = document.querySelectorAll('.filter-chip.active').length;
+    const filterCount = document.getElementById('filterCount');
+    
+    if (activeFilters > 0) {
+        filterCount.textContent = activeFilters;
+        filterCount.style.display = 'inline';
+    } else {
+        filterCount.style.display = 'none';
+    }
+}
+
+// Filter files
+function filterFiles() {
+    const searchTerm = searchInput?.value.toLowerCase().trim() || '';
+    const activeTypes = Array.from(document.querySelectorAll('.filter-chip[data-type].active'))
+        .map(chip => chip.dataset.type);
+    
+    let visibleCount = 0;
+    
+    fileCards.forEach(card => {
+        const name = card.dataset.name;
+        const type = card.dataset.type;
+        
+        let showFile = true;
+        
+        // Search filter
+        if (searchTerm && !name.includes(searchTerm)) {
+            showFile = false;
+        }
+        
+        // Type filter
+        if (activeTypes.length > 0 && !activeTypes.includes(type) && type !== 'folder') {
+            showFile = false;
+        }
+        
+        if (showFile) {
+            card.style.display = '';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    // Update count
+    if (fileCount) {
+        fileCount.textContent = visibleCount;
+    }
+    
+    // Show/hide no results
+    if (visibleCount === 0 && (searchTerm || activeTypes.length > 0)) {
+        noResults.style.display = 'block';
+        gridView.style.display = 'none';
+        listView.style.display = 'none';
+    } else {
+        noResults.style.display = 'none';
+        if (gridViewBtn.classList.contains('active')) {
+            gridView.style.display = 'grid';
+        } else {
+            listView.style.display = 'flex';
+        }
+    }
+}
+
+// File action functions
+function downloadFile(uuid) {
+    window.location.href = `/files/download/${uuid}`;
+}
+
+function shareFile(uuid) {
+    window.location.href = `/files/share/${uuid}`;
+}
+
+function deleteFile(uuid) {
+    if (confirm('Are you sure you want to delete this file?')) {
+        fetch(`/files/delete/${uuid}`, { method: 'POST' })
+            .then(response => {
+                if (response.ok) {
+                    location.reload();
+                }
+            });
+    }
+}
+
+// Selection handling
+const checkboxes = document.querySelectorAll('[type="checkbox"][data-file-id]');
+const selectedCount = document.getElementById('selectedCount');
+const selectedCountValue = document.getElementById('selectedCountValue');
+
+checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', updateSelectedCount);
+});
+
+function updateSelectedCount() {
+    const selected = document.querySelectorAll('[type="checkbox"][data-file-id]:checked').length;
+    
+    if (selected > 0) {
+        selectedCount.style.display = 'flex';
+        selectedCountValue.textContent = selected;
+    } else {
+        selectedCount.style.display = 'none';
+    }
+}
+</script>
+{% endblock %}

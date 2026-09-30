@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Integrity Check{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shield-alt me-2 text-primary"></i>
+                        File Integrity Verification
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <!-- File Info -->
+                    <div class="text-center mb-4">
+                        <div class="file-icon default mx-auto mb-3" style="width: 80px; height: 80px; font-size: 2rem;">
+                            <i class="fas {{ file.get_file_type_icon() }}"></i>
+                        </div>
+                        <h5>{{ file.original_filename }}</h5>
+                        <p class="text-muted">{{ file.format_size() }} • {{ file.encryption_algorithm }}</p>
+                    </div>
+                    
+                    <!-- Integrity Result -->
+                    <div class="text-center mb-4">
+                        {% if result.encrypted_integrity %}
+                        <div class="alert alert-success">
+                            <h4 class="alert-heading">
+                                <i class="fas fa-check-circle fa-2x mb-2"></i><br>
+                                Integrity Verified
+                            </h4>
+                            <p class="mb-0">The encrypted file has not been tampered with. All checksums match.</p>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-danger">
+                            <h4 class="alert-heading">
+                                <i class="fas fa-exclamation-triangle fa-2x mb-2"></i><br>
+                                Integrity Check Failed
+                            </h4>
+                            <p class="mb-0">The file may have been modified or corrupted. Please re-upload the original file.</p>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Hash Details -->
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                <i class="fas fa-fingerprint me-2"></i>Hash Comparison
+                            </h6>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Stored Hash (SHA-256)</label>
+                                <div class="bg-white p-2 rounded border">
+                                    <code class="text-break" style="font-size: 0.75rem;">{{ result.stored_hash }}</code>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label text-muted small">Computed Hash (SHA-256)</label>
+                                <div class="bg-white p-2 rounded border">
+                                    <code class="text-break {% if result.encrypted_integrity %}text-success{% else %}text-danger{% endif %}" 
+                                          style="font-size: 0.75rem;">{{ result.current_hash }}</code>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex align-items-center">
+                                <span class="me-2">Match Status:</span>
+                                {% if result.encrypted_integrity %}
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i> Hashes Match
+                                </span>
+                                {% else %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times me-1"></i> Hashes Do Not Match
+                                </span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- File Metadata -->
+                    <div class="mt-4">
+                        <h6><i class="fas fa-info-circle me-2"></i>File Metadata</h6>
+                        <table class="table table-sm">
+                            <tr>
+                                <td class="text-muted">Original SHA-256</td>
+                                <td><code style="font-size: 0.7rem;">{{ file.original_hash_sha256 }}</code></td>
+                            </tr>
+                            {% if file.original_hash_sha512 %}
+                            <tr>
+                                <td class="text-muted">Original SHA-512</td>
+                                <td><code style="font-size: 0.6rem;">{{ file.original_hash_sha512[:64] }}...</code></td>
+                            </tr>
+                            {% endif %}
+                            <tr>
+                                <td class="text-muted">Encryption</td>
+                                <td>{{ file.encryption_algorithm }} ({{ file.encryption_mode }})</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Uploaded</td>
+                                <td>{{ format_datetime(file.created_at) }}</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="d-flex gap-2 mt-4">
+                        <a href="{{ url_for('main.my_files') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Files
+                        </a>
+                        <a href="{{ url_for('files.download', file_uuid=file.uuid) }}" class="btn btn-primary">
+                            <i class="fas fa-download me-1"></i> Download File
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

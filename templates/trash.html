@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Trash{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3 mb-4">
+            <div class="sidebar rounded-3">
+                <a href="{{ url_for('main.dashboard') }}" class="sidebar-link">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="{{ url_for('main.my_files') }}" class="sidebar-link">
+                    <i class="fas fa-folder"></i> My Files
+                </a>
+                <a href="{{ url_for('main.shared_with_me') }}" class="sidebar-link">
+                    <i class="fas fa-share-alt"></i> Shared with Me
+                </a>
+                <a href="{{ url_for('main.trash') }}" class="sidebar-link active">
+                    <i class="fas fa-trash"></i> Trash
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <div class="card fade-in">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-trash me-2 text-danger"></i>
+                        Trash
+                    </h5>
+                    {% if files %}
+                    <span class="badge bg-secondary">{{ files|length }} files</span>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    {% if not files %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-trash fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">Trash is empty</h5>
+                        <p class="text-muted">Deleted files will appear here for recovery.</p>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Files in trash can be restored or permanently deleted. Permanently deleted files cannot be recovered.
+                    </div>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Size</th>
+                                    <th>Deleted On</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for file in files %}
+                                <tr class="fade-in">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="file-icon default me-3" style="opacity: 0.5;">
+                                                <i class="fas {{ file.get_file_type_icon() }}"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-medium text-muted">{{ file.original_filename }}</div>
+                                                <small class="text-muted">.{{ file.file_extension }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ file.format_size() }}</td>
+                                    <td>{{ format_datetime(file.deleted_at) }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <form action="{{ url_for('files.restore', file_uuid=file.uuid) }}" method="POST" class="d-inline">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-success" title="Restore">
+                                                    <i class="fas fa-undo"></i>
+                                                </button>
+                                            </form>
+                                            <form action="{{ url_for('files.permanent_delete', file_uuid=file.uuid) }}" method="POST" class="d-inline"
+                                                  onsubmit="return confirm('Permanently delete this file? This cannot be undone!');">
+                                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                <button type="submit" class="btn btn-danger" title="Delete Permanently">
+                                                    <i class="fas fa-times"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

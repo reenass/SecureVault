@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <div class="text-center mb-3">
+                        <div class="rounded-circle bg-primary d-inline-flex align-items-center justify-content-center" 
+                             style="width: 80px; height: 80px;">
+                            <i class="fas fa-user fa-2x text-white"></i>
+                        </div>
+                    </div>
+                    <h5 class="text-center">{{ current_user.get_full_name() }}</h5>
+                    <p class="text-center text-muted mb-0">{{ current_user.email }}</p>
+                </div>
+                <div class="list-group list-group-flush">
+                    <a href="#profile" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-user me-2"></i> Profile
+                    </a>
+                    <a href="#security" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-lock me-2"></i> Security
+                    </a>
+                    <a href="#encryption" class="list-group-item list-group-item-action" data-bs-toggle="tab">
+                        <i class="fas fa-key me-2"></i> Encryption Keys
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-9">
+            <div class="tab-content">
+                <!-- Profile Tab -->
+                <div class="tab-pane fade show active" id="profile">
+                    <div class="card fade-in">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-user me-2"></i>Profile Settings
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('main.settings') }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="update_profile">
+                                
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label">First Name</label>
+                                        <input type="text" name="first_name" class="form-control" 
+                                               value="{{ current_user.first_name or '' }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Last Name</label>
+                                        <input type="text" name="last_name" class="form-control" 
+                                               value="{{ current_user.last_name or '' }}">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Username</label>
+                                        <input type="text" class="form-control" value="{{ current_user.username }}" disabled>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label">Email</label>
+                                        <input type="email" class="form-control" value="{{ current_user.email }}" disabled>
+                                    </div>
+                                </div>
+                                
+                                <div class="mt-4">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="fas fa-save me-1"></i> Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    
+                    <!-- Storage Info -->
+                    <div class="card mt-4 fade-in">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-hdd me-2"></i>Storage Usage
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span>{{ format_bytes(current_user.storage_used) }} used</span>
+                                <span>{{ format_bytes(current_user.storage_quota) }} total</span>
+                            </div>
+                            <div class="progress" style="height: 20px;">
+                                <div class="progress-bar" style="width: {{ current_user.get_storage_percentage() }}%">
+                                    {{ current_user.get_storage_percentage() }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Security Tab -->
+                <div class="tab-pane fade" id="security">
+                    <div class="card fade-in">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-lock me-2"></i>Change Password
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <form action="{{ url_for('main.settings') }}" method="POST">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="change_password">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Current Password</label>
+                                    <input type="password" name="current_password" class="form-control" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">New Password</label>
+                                    <input type="password" name="new_password" class="form-control" required minlength="8">
+                                    <div class="form-text">Minimum 8 characters</div>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="form-label">Confirm New Password</label>
+                                    <input type="password" name="confirm_password" class="form-control" required>
+                                </div>
+                                
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-key me-1"></i> Change Password
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Encryption Keys Tab -->
+                <div class="tab-pane fade" id="encryption">
+                    <div class="card fade-in">
+                        <div class="card-header">
+                            <h5 class="mb-0">
+                                <i class="fas fa-key me-2"></i>Encryption Keys
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="alert alert-info">
+                                <i class="fas fa-info-circle me-2"></i>
+                                Your RSA key pair is used for hybrid encryption. The private key is encrypted with your password and stored securely.
+                            </div>
+                            
+                            <table class="table">
+                                <tr>
+                                    <td class="text-muted">Key Algorithm</td>
+                                    <td><strong>RSA-2048</strong></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Generated</td>
+                                    <td>{{ format_datetime(current_user.key_generated_at) if current_user.key_generated_at else 'Not generated' }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Public Key</td>
+                                    <td>
+                                        {% if current_user.public_key %}
+                                        <span class="badge bg-success">Available</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Not Set</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Private Key</td>
+                                    <td>
+                                        {% if current_user.private_key_encrypted %}
+                                        <span class="badge bg-success">Encrypted & Stored</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Not Set</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            </table>
+                            
+                            <div class="alert alert-warning">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                <strong>Warning:</strong> Regenerating keys will make previously encrypted files inaccessible unless you have backups!
+                            </div>
+                            
+                            <form action="{{ url_for('main.settings') }}" method="POST" 
+                                  onsubmit="return confirm('Are you sure? This will make old encrypted files inaccessible!');">
+                                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                <input type="hidden" name="action" value="regenerate_keys">
+                                
+                                <div class="mb-3">
+                                    <label class="form-label">Verify Password</label>
+                                    <input type="password" name="key_password" class="form-control" required
+                                           placeholder="Enter your account password">
+                                </div>
+                                
+                                <button type="submit" class="btn btn-warning">
+                                    <i class="fas fa-sync me-1"></i> Regenerate Keys
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Handle tab navigation from URL hash
+    const hash = window.location.hash;
+    if (hash) {
+        const tab = document.querySelector(`a[href="${hash}"]`);
+        if (tab) {
+            new bootstrap.Tab(tab).show();
+        }
+    }
+</script>
+{% endblock %}

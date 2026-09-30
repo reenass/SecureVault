@@ -1,0 +1,22 @@
+# Secure Cloud Storage - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# Flask Framework
+Flask==3.0.0
+Flask-SQLAlchemy==3.1.1
+Flask-Login==0.6.3
+Flask-WTF==1.2.1
+
+# Database
+PyMySQL==1.1.0
+SQLAlchemy==2.0.23
+
+# Cryptography
+cryptography==41.0.7
+
+# Utilities
+Werkzeug==3.0.1
+python-dotenv==1.0.0
+
+# For production (optional)
+gunicorn==21.2.0

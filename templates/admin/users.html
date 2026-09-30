@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}User Management{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Admin Sidebar -->
+        <div class="col-lg-2 col-md-3 mb-4">
+            <div class="sidebar rounded-3">
+                <div class="px-3 py-2">
+                    <span class="badge bg-danger">Admin Panel</span>
+                </div>
+                <hr class="my-2">
+                <a href="{{ url_for('admin.admin_dashboard') }}" class="sidebar-link">
+                    <i class="fas fa-tachometer-alt"></i> Dashboard
+                </a>
+                <a href="{{ url_for('admin.admin_users') }}" class="sidebar-link active">
+                    <i class="fas fa-users"></i> Users
+                </a>
+                <a href="{{ url_for('admin.activity_logs') }}" class="sidebar-link">
+                    <i class="fas fa-history"></i> Activity Logs
+                </a>
+                <hr class="my-2">
+                <a href="{{ url_for('main.dashboard') }}" class="sidebar-link">
+                    <i class="fas fa-arrow-left"></i> Back to App
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <div class="card fade-in">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">
+                        <i class="fas fa-users me-2"></i>User Management
+                    </h5>
+                    <span class="badge bg-primary">{{ users|length }} users</span>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead>
+                                <tr>
+                                    <th>User</th>
+                                    <th>Role</th>
+                                    <th>Storage</th>
+                                    <th>Status</th>
+                                    <th>Last Login</th>
+                                    <th>Joined</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for user in users %}
+                                <tr class="fade-in">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="rounded-circle bg-{% if user.is_admin %}danger{% else %}primary{% endif %} d-flex align-items-center justify-content-center me-2" 
+                                                 style="width: 40px; height: 40px;">
+                                                <i class="fas fa-{% if user.is_admin %}user-shield{% else %}user{% endif %} text-white"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-medium">{{ user.username }}</div>
+                                                <small class="text-muted">{{ user.email }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if user.is_admin %}
+                                        <span class="badge bg-danger">Admin</span>
+                                        {% else %}
+                                        <span class="badge bg-secondary">User</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div style="width: 100px;">
+                                            <div class="progress" style="height: 6px;">
+                                                <div class="progress-bar" style="width: {{ user.get_storage_percentage() }}%"></div>
+                                            </div>
+                                            <small class="text-muted">{{ format_bytes(user.storage_used) }} / {{ format_bytes(user.storage_quota) }}</small>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        {% if user.is_active %}
+                                        <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                        <span class="badge bg-danger">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ format_datetime(user.last_login) if user.last_login else 'Never' }}</td>
+                                    <td>{{ format_datetime(user.created_at) }}</td>
+                                    <td>
+                                        {% if user.id != current_user.id %}
+                                        <form action="{{ url_for('admin.toggle_user_status', user_id=user.id) }}" method="POST" class="d-inline">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-{{ 'danger' if user.is_active else 'success' }}" 
+                                                    title="{{ 'Deactivate' if user.is_active else 'Activate' }}">
+                                                <i class="fas fa-{{ 'ban' if user.is_active else 'check' }}"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

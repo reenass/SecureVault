@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}Computation Result - Secure Cloud Storage{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Success Header -->
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle p-4 mb-3">
+                    <i class="fas fa-check-circle fa-3x text-success"></i>
+                </div>
+                <h2 class="fw-bold">Homomorphic Computation Complete</h2>
+                <p class="text-muted">Results computed on encrypted data and decrypted successfully</p>
+            </div>
+
+            <!-- Results Card -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-gradient-primary text-white py-3" 
+                     style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>Computation Results
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <!-- Total Files -->
+                        <div class="col-md-6">
+                            <div class="text-center p-4 bg-light rounded">
+                                <i class="fas fa-file fa-2x text-primary mb-3"></i>
+                                <h3 class="fw-bold mb-1">{{ result.total_files }}</h3>
+                                <p class="text-muted mb-0">Total Files</p>
+                            </div>
+                        </div>
+                        <!-- Total Size -->
+                        <div class="col-md-6">
+                            <div class="text-center p-4 bg-light rounded">
+                                <i class="fas fa-database fa-2x text-success mb-3"></i>
+                                <h3 class="fw-bold mb-1">{{ result.total_size }}</h3>
+                                <p class="text-muted mb-0">Total Storage</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Stats -->
+                    <hr class="my-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Raw Size (bytes):</span>
+                                <strong>{{ "{:,}".format(result.total_size_bytes) }}</strong>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="d-flex justify-content-between mb-2">
+                                <span class="text-muted">Computed Homomorphically:</span>
+                                <span class="badge bg-success">
+                                    <i class="fas fa-check me-1"></i>Yes
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Explanation -->
+            <div class="card bg-light border-0 mb-4">
+                <div class="card-body">
+                    <h6 class="fw-bold mb-3">
+                        <i class="fas fa-info-circle text-info me-2"></i>What Just Happened?
+                    </h6>
+                    <ol class="mb-0">
+                        <li class="mb-2">
+                            <strong>Encrypted Values Retrieved:</strong>
+                            <span class="text-muted">Your file sizes were stored as Paillier ciphertexts</span>
+                        </li>
+                        <li class="mb-2">
+                            <strong>Homomorphic Addition:</strong>
+                            <span class="text-muted">E(a) × E(b) = E(a+b) performed on all encrypted sizes</span>
+                        </li>
+                        <li class="mb-2">
+                            <strong>Final Decryption:</strong>
+                            <span class="text-muted">Only the final total was decrypted using your private key</span>
+                        </li>
+                        <li class="mb-0">
+                            <strong>Privacy Preserved:</strong>
+                            <span class="text-muted">Individual file sizes were never exposed during computation</span>
+                        </li>
+                    </ol>
+                </div>
+            </div>
+
+            <!-- Security Badge -->
+            <div class="card border-success mb-4">
+                <div class="card-body d-flex align-items-center">
+                    <i class="fas fa-shield-alt fa-2x text-success me-3"></i>
+                    <div>
+                        <h6 class="mb-1">Zero-Knowledge Computation</h6>
+                        <small class="text-muted">
+                            The server computed the sum without learning any individual file sizes. 
+                            Only you possess the key to decrypt the final result.
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="d-flex justify-content-center gap-3">
+                <a href="{{ url_for('homomorphic.dashboard') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+                <a href="{{ url_for('main.dashboard') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-home me-2"></i>Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

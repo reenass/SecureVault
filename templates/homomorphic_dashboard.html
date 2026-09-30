@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}Homomorphic Encryption Dashboard - Secure Cloud Storage{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-1">
+                <i class="fas fa-calculator text-success me-2"></i>Homomorphic Encryption
+            </h2>
+            <p class="text-muted mb-0">Privacy-preserving computations on your encrypted data</p>
+        </div>
+        <a href="{{ url_for('homomorphic.demo_homomorphic') }}" class="btn btn-outline-primary">
+            <i class="fas fa-flask me-2"></i>Demo
+        </a>
+    </div>
+
+    <div class="row g-4">
+        <!-- Status Card -->
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-key fa-lg text-success"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Key Status</h6>
+                            <h4 class="mb-0 text-success">Active</h4>
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-clock me-1"></i>
+                        Created: {{ key_created.strftime('%b %d, %Y') if key_created else 'N/A' }}
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Encrypted Stats Card -->
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-lock fa-lg text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Encrypted Stats</h6>
+                            <h4 class="mb-0">{{ stats_count }}</h4>
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-file me-1"></i>
+                        Files with encrypted statistics
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Algorithm Card -->
+        <div class="col-md-4">
+            <div class="card shadow-sm h-100">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="flex-shrink-0">
+                            <div class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 rounded-circle p-3">
+                                <i class="fas fa-shield-alt fa-lg text-info"></i>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-3">
+                            <h6 class="text-muted mb-1">Algorithm</h6>
+                            <h4 class="mb-0">Paillier</h4>
+                        </div>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-lock me-1"></i>
+                        1024-bit additive homomorphism
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions -->
+    <div class="row g-4 mt-2">
+        <!-- Encrypt Stats -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lock text-primary me-2"></i>Encrypt File Statistics
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Encrypt your file sizes and counts for privacy-preserving aggregation.
+                        The server can compute totals without seeing individual values.
+                    </p>
+                    <form method="POST" action="{{ url_for('homomorphic.encrypt_file_stats') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <input type="password" name="password" class="form-control" 
+                                   placeholder="Account password" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="fas fa-lock me-2"></i>Encrypt All File Stats
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Compute Total -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calculator text-success me-2"></i>Compute Encrypted Total
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted mb-3">
+                        Calculate total storage using homomorphic addition on encrypted values.
+                        Only you can decrypt the final result.
+                    </p>
+                    <form method="POST" action="{{ url_for('homomorphic.compute_encrypted_total') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <div class="mb-3">
+                            <input type="password" name="password" class="form-control" 
+                                   placeholder="Account password to decrypt result" required>
+                        </div>
+                        <button type="submit" class="btn btn-success w-100" 
+                                {% if stats_count == 0 %}disabled{% endif %}>
+                            <i class="fas fa-calculator me-2"></i>Compute Total
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How It Works -->
+    <div class="card shadow-sm mt-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="mb-0">
+                <i class="fas fa-info-circle text-info me-2"></i>How It Works
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="row g-4">
+                <div class="col-md-3 text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle p-3 mb-3">
+                        <i class="fas fa-file fa-lg text-primary"></i>
+                    </div>
+                    <h6>1. File Uploaded</h6>
+                    <small class="text-muted">File size = 1024 bytes</small>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-success bg-opacity-10 rounded-circle p-3 mb-3">
+                        <i class="fas fa-lock fa-lg text-success"></i>
+                    </div>
+                    <h6>2. Encrypt Size</h6>
+                    <small class="text-muted">E(1024) = large ciphertext</small>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 rounded-circle p-3 mb-3">
+                        <i class="fas fa-plus fa-lg text-warning"></i>
+                    </div>
+                    <h6>3. Homomorphic Add</h6>
+                    <small class="text-muted">E(a) × E(b) = E(a+b)</small>
+                </div>
+                <div class="col-md-3 text-center">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-info bg-opacity-10 rounded-circle p-3 mb-3">
+                        <i class="fas fa-unlock fa-lg text-info"></i>
+                    </div>
+                    <h6>4. Decrypt Total</h6>
+                    <small class="text-muted">D(E(sum)) = total size</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Regenerate Keys -->
+    <div class="text-center mt-4">
+        <a href="{{ url_for('homomorphic.setup_homomorphic') }}" class="btn btn-outline-warning">
+            <i class="fas fa-redo me-2"></i>Regenerate Keys
+        </a>
+    </div>
+</div>
+{% endblock %}

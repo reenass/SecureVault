@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}Shared with Me{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <div class="row">
+        <!-- Sidebar -->
+        <div class="col-lg-2 col-md-3 mb-4">
+            <div class="sidebar rounded-3">
+                <a href="{{ url_for('main.dashboard') }}" class="sidebar-link">
+                    <i class="fas fa-home"></i> Dashboard
+                </a>
+                <a href="{{ url_for('main.my_files') }}" class="sidebar-link">
+                    <i class="fas fa-folder"></i> My Files
+                </a>
+                <a href="{{ url_for('main.shared_with_me') }}" class="sidebar-link active">
+                    <i class="fas fa-share-alt"></i> Shared with Me
+                </a>
+                <a href="{{ url_for('main.trash') }}" class="sidebar-link">
+                    <i class="fas fa-trash"></i> Trash
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="col-lg-10 col-md-9">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-share-alt me-2 text-primary"></i>
+                        Files Shared with Me
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if not shared_files %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-share-alt fa-4x text-muted mb-3"></i>
+                        <h5 class="text-muted">No files shared with you</h5>
+                        <p class="text-muted">When someone shares a file with you, it will appear here.</p>
+                    </div>
+                    {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>File Name</th>
+                                    <th>Shared By</th>
+                                    <th>Permissions</th>
+                                    <th>Shared On</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for share in shared_files %}
+                                <tr class="fade-in">
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="file-icon default me-3">
+                                                <i class="fas {{ share.file.get_file_type_icon() }}"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-medium">{{ share.file.original_filename }}</div>
+                                                <small class="text-muted">{{ share.file.format_size() }}</small>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>{{ share.shared_by.username }}</td>
+                                    <td>
+                                        {% if share.can_download %}
+                                        <span class="badge bg-success">Download</span>
+                                        {% endif %}
+                                        {% if share.can_view %}
+                                        <span class="badge bg-info">View</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ format_datetime(share.created_at) }}</td>
+                                    <td>
+                                        {% if share.can_download %}
+                                        <a href="{{ url_for('files.download', file_uuid=share.file.uuid) }}" 
+                                           class="btn btn-sm btn-primary">
+                                            <i class="fas fa-download"></i>
+                                        </a>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

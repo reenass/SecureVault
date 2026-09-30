@@ -1,0 +1,236 @@
+{% extends "base.html" %}
+
+{% block title %}Homomorphic Encryption Demo - Secure Cloud Storage{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <div class="d-inline-flex align-items-center justify-content-center bg-primary bg-opacity-10 rounded-circle p-3 mb-3">
+                    <i class="fas fa-flask fa-2x text-primary"></i>
+                </div>
+                <h2 class="fw-bold">Homomorphic Encryption Demo</h2>
+                <p class="text-muted">Interactive demonstration of Paillier cryptosystem operations</p>
+            </div>
+
+            <!-- Demo Interface -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calculator text-success me-2"></i>Try It Yourself
+                    </h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
+                        <!-- Input Values -->
+                        <div class="col-md-4">
+                            <h6 class="fw-bold mb-3">1. Enter Values</h6>
+                            <div class="mb-3">
+                                <label class="form-label">Value A</label>
+                                <input type="number" id="valueA" class="form-control" value="100" min="0" max="10000">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Value B</label>
+                                <input type="number" id="valueB" class="form-control" value="250" min="0" max="10000">
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Scalar k</label>
+                                <input type="number" id="scalarK" class="form-control" value="3" min="1" max="100">
+                            </div>
+                        </div>
+
+                        <!-- Encrypted Values -->
+                        <div class="col-md-4">
+                            <h6 class="fw-bold mb-3">2. Encrypted Values</h6>
+                            <div class="mb-3">
+                                <label class="form-label">E(A)</label>
+                                <textarea id="encA" class="form-control font-monospace" rows="2" readonly 
+                                          style="font-size: 0.75rem;">Click "Encrypt" to see</textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">E(B)</label>
+                                <textarea id="encB" class="form-control font-monospace" rows="2" readonly
+                                          style="font-size: 0.75rem;">Click "Encrypt" to see</textarea>
+                            </div>
+                            <button id="encryptBtn" class="btn btn-primary w-100">
+                                <i class="fas fa-lock me-2"></i>Encrypt Values
+                            </button>
+                        </div>
+
+                        <!-- Operations -->
+                        <div class="col-md-4">
+                            <h6 class="fw-bold mb-3">3. Homomorphic Operations</h6>
+                            <div class="d-grid gap-2 mb-3">
+                                <button id="addBtn" class="btn btn-outline-success" disabled>
+                                    <i class="fas fa-plus me-2"></i>E(A) × E(B) = E(A+B)
+                                </button>
+                                <button id="multiplyBtn" class="btn btn-outline-warning" disabled>
+                                    <i class="fas fa-times me-2"></i>E(A)^k = E(A×k)
+                                </button>
+                            </div>
+                            <div class="alert alert-info mb-0" id="resultBox" style="display: none;">
+                                <small><strong>Result:</strong></small>
+                                <div id="resultText" class="font-monospace mt-1"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Mathematical Explanation -->
+            <div class="row g-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-success bg-opacity-10">
+                            <h6 class="mb-0 text-success">
+                                <i class="fas fa-plus-circle me-2"></i>Additive Homomorphism
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">
+                                The product of two ciphertexts decrypts to the sum of plaintexts:
+                            </p>
+                            <div class="bg-light p-3 rounded text-center font-monospace">
+                                D(E(m₁) × E(m₂) mod n²) = m₁ + m₂ mod n
+                            </div>
+                            <hr>
+                            <h6>Use Cases:</h6>
+                            <ul class="small text-muted mb-0">
+                                <li>Sum encrypted file sizes</li>
+                                <li>Count encrypted records</li>
+                                <li>Aggregate encrypted votes</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-header bg-warning bg-opacity-10">
+                            <h6 class="mb-0 text-warning">
+                                <i class="fas fa-times-circle me-2"></i>Scalar Multiplication
+                            </h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-3">
+                                Raising a ciphertext to a power multiplies the plaintext:
+                            </p>
+                            <div class="bg-light p-3 rounded text-center font-monospace">
+                                D(E(m)^k mod n²) = k × m mod n
+                            </div>
+                            <hr>
+                            <h6>Use Cases:</h6>
+                            <ul class="small text-muted mb-0">
+                                <li>Apply percentage multipliers</li>
+                                <li>Scale encrypted values</li>
+                                <li>Compute weighted averages</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Paillier Algorithm -->
+            <div class="card shadow-sm mt-4">
+                <div class="card-header bg-white py-3">
+                    <h5 class="mb-0">
+                        <i class="fas fa-book text-info me-2"></i>Paillier Cryptosystem
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <h6 class="fw-bold text-primary">Key Generation</h6>
+                            <ol class="small text-muted">
+                                <li>Choose primes p, q</li>
+                                <li>Compute n = p × q</li>
+                                <li>Compute λ = lcm(p-1, q-1)</li>
+                                <li>Select g = n + 1</li>
+                                <li>Compute μ = L(g^λ mod n²)^(-1) mod n</li>
+                            </ol>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="fw-bold text-success">Encryption</h6>
+                            <ol class="small text-muted">
+                                <li>Select random r ∈ Z*_n</li>
+                                <li>Compute c = g^m × r^n mod n²</li>
+                            </ol>
+                            <div class="alert alert-success py-2 mt-3">
+                                <small><strong>Public:</strong> (n, g)</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <h6 class="fw-bold text-danger">Decryption</h6>
+                            <ol class="small text-muted">
+                                <li>Compute L(c^λ mod n²)</li>
+                                <li>Compute m = L(c^λ mod n²) × μ mod n</li>
+                            </ol>
+                            <div class="alert alert-danger py-2 mt-3">
+                                <small><strong>Private:</strong> (λ, μ)</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Back Button -->
+            <div class="text-center mt-4">
+                <a href="{{ url_for('homomorphic.dashboard') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Simple demo simulation (in real impl, would call API)
+document.addEventListener('DOMContentLoaded', function() {
+    const encryptBtn = document.getElementById('encryptBtn');
+    const addBtn = document.getElementById('addBtn');
+    const multiplyBtn = document.getElementById('multiplyBtn');
+    const resultBox = document.getElementById('resultBox');
+    const resultText = document.getElementById('resultText');
+    
+    let valueA, valueB, scalarK;
+    
+    encryptBtn.addEventListener('click', function() {
+        valueA = parseInt(document.getElementById('valueA').value) || 0;
+        valueB = parseInt(document.getElementById('valueB').value) || 0;
+        scalarK = parseInt(document.getElementById('scalarK').value) || 1;
+        
+        // Simulate encryption (show truncated "ciphertext")
+        const encAText = 'E(' + valueA + ') = 0x' + Math.random().toString(16).substr(2, 32) + '...';
+        const encBText = 'E(' + valueB + ') = 0x' + Math.random().toString(16).substr(2, 32) + '...';
+        
+        document.getElementById('encA').value = encAText;
+        document.getElementById('encB').value = encBText;
+        
+        addBtn.disabled = false;
+        multiplyBtn.disabled = false;
+        
+        resultBox.style.display = 'none';
+    });
+    
+    addBtn.addEventListener('click', function() {
+        const sum = valueA + valueB;
+        resultBox.style.display = 'block';
+        resultText.innerHTML = `
+            <strong>E(A) × E(B) = E(${valueA} + ${valueB})</strong><br>
+            <span class="text-success">Decrypted Result: ${sum}</span>
+        `;
+    });
+    
+    multiplyBtn.addEventListener('click', function() {
+        const product = valueA * scalarK;
+        resultBox.style.display = 'block';
+        resultText.innerHTML = `
+            <strong>E(A)^${scalarK} = E(${valueA} × ${scalarK})</strong><br>
+            <span class="text-success">Decrypted Result: ${product}</span>
+        `;
+    });
+});
+</script>
+{% endblock %}
